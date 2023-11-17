@@ -57,13 +57,14 @@ public class ServiceMenu {
 			if(rolMod.getSegOrgModulos().getnIdModuloPadre().getId()==parentId) {
 				menuChild = new PayloadMenu();
 				permisos = new DTOPermisos();
-				menuChild.setNombreModulo(rolMod.getSegOrgModulos().getMenuDesc());
+				menuChild.setNombreModulo(rolMod.getSegOrgModulos().getDescModulo());
 				menuChild.setPos(rolMod.getSegOrgModulos().getMenuPos());
 				menuChild.setNivelModulo(rolMod.getSegOrgModulos().getnIdNivel().getDescNivel());
 				permisos.setCrear(rolMod.getCreate().equals("S")?true:false);
 				permisos.setEditar(rolMod.getUpdate().equals("S")?true:false);
 				permisos.setEliminar(rolMod.getDelete().equals("S")?true:false);
 				permisos.setLeer(rolMod.getRead().equals("S")?true:false);
+				permisos.setCodigoRol(rolMod.getSegOrgRoles().getEtiquetaRol());
 				
 				List<DTOPermisos> permisosList = new ArrayList<DTOPermisos>();
 				permisosList.add(permisos);
