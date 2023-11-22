@@ -45,7 +45,11 @@ public class ServiceLogin {
 				responseDto.setStatus("failed");
 				responseDto.setMessage("Autenticación fallida");
 			}
+		}else {
+			responseDto.setStatus("failed");
+			responseDto.setMessage("El correo electrónico es incorrecto");
 		}
+		
 		return responseDto;
 	}
 	
