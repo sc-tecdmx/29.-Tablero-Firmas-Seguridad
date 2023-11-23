@@ -84,7 +84,7 @@ public class ServiceEmpleados {
 				if (area.isPresent()) {
 
 					SegOrgUsuarios usuarioStored = null;
-					
+
 					if (payload.getUsuario() != null) {
 
 						Optional<SegCatEstadoUsuario> estadoCuenta = segCatEstadoUsuarioRepository
@@ -151,6 +151,78 @@ public class ServiceEmpleados {
 					empleado.setRfc(payload.getRfc());
 					empleado.setPathFotografia(payload.getPathFotografia());
 					empleado.setIdUsuario(usuarioStored);
+					InstEmpleado empleadoStored = instEmpleadoRepository.save(empleado);
+
+					InstEmpleadoPuesto empleadoPuesto = new InstEmpleadoPuesto();
+					empleadoPuesto.setIdNumEmpleado(empleadoStored);
+					empleadoPuesto.setIdCatArea(area.get());
+					empleadoPuesto.setIdPuesto(puesto.get());
+					empleadoPuesto.setFechaAlta(utils.formatDate(payload.getFechaAltaEmpleado()));
+					empleadoPuesto.setFechaConclusion(null);
+
+					instEmpleadoPuestoRepository.save(empleadoPuesto);
+					response.setMessage("El empleado se ha creado correctamente");
+					response.setStatus("Success");
+
+					resp.setEmpleado(empleadoStored);
+					response.setData(resp);
+
+					if (payload.isEsTitular()) {
+						InstTitularUAdscripcion titular = new InstTitularUAdscripcion();
+						titular.setIdUnAdscripcion(area.get().getIdUnAdscripcion());
+						titular.setIdEmpleadoPuesto(empleadoPuesto);
+						titular.setFechaInicio(utils.formatDate(payload.getFechainicioTitular()));
+						titular.setFechaConclusion(null);
+
+						instTitularUAdscripcionRepository.save(titular);
+					}
+
+				} else {
+					response.setMessage("El código de area es incorrecto");
+					response.setStatus("Fail");
+				}
+			} else {
+				response.setMessage("El código de puesto es incorrecto");
+				response.setStatus("Fail");
+			}
+		} else {
+			response.setMessage("El código de sexo es incorrecto");
+			response.setStatus("Fail");
+		}
+		return response;
+	}
+
+	public DTOResponse createEmpleadoV2(PayloadEmpleados payload, DTOResponse response) {
+		SeguridadUtils utils = new SeguridadUtils();
+		ResponseBodyEmpleados resp = new ResponseBodyEmpleados();
+		
+		Optional<InstEmpleado> empleadoExist = instEmpleadoRepository.findById(payload.getIdNumEmpleado());
+		if(empleadoExist.isPresent()) {
+			response.setMessage("Ya existe un registro con el número de empleado proporcionado");
+			response.setStatus("Fail");
+			return response;
+		}
+		Optional<InstCatSexo> sexo = instCatSexoRepository.findBySexo(payload.getCodigoSexo());
+		if (sexo.isPresent()) {
+			Optional<InstCatPuestos> puesto = instCatPuestosRepository
+					.findByDescNombramiento(payload.getCodigoPuesto());
+			if (puesto.isPresent()) {
+				Optional<InstCatAreas> area = instCatAreasRepository.findByAbrevArea(payload.getCodigoArea());
+				if (area.isPresent()) {
+					
+					InstEmpleado empleado = new InstEmpleado();
+					empleado.setId(payload.getIdNumEmpleado());
+					empleado.setNombre(payload.getNombre());
+					empleado.setApellido1(payload.getApellido1());
+					empleado.setApellido2(payload.getApellido2());
+					empleado.setIdSexo(sexo.get());
+					empleado.setEmailPers(payload.getEmailPers());
+					empleado.setEmailInst(payload.getEmailInst());
+					empleado.setTelPers(payload.getTelPers());
+					empleado.setTelInst(payload.getTelInst());
+					empleado.setCurp(payload.getCurp());
+					empleado.setRfc(payload.getRfc());
+					empleado.setPathFotografia(payload.getPathFotografia());
 					InstEmpleado empleadoStored = instEmpleadoRepository.save(empleado);
 
 					InstEmpleadoPuesto empleadoPuesto = new InstEmpleadoPuesto();

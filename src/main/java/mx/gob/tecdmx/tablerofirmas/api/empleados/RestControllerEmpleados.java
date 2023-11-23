@@ -25,7 +25,7 @@ public class RestControllerEmpleados {
 	public ResponseEntity<String> createMenu(@RequestBody PayloadEmpleados payload) {
 		SeguridadUtils utils = new SeguridadUtils();
 		DTOResponse response = new DTOResponse();
-		serviceEmpleados.createEmpleado(payload, response);
+		serviceEmpleados.createEmpleadoV2(payload, response);
 		return ResponseEntity.ok().header(null).body(utils.objectToJson(response));
 	}
 	

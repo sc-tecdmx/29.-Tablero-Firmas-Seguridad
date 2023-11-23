@@ -15,8 +15,11 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import mx.gob.tecdmx.tablerofirmas.api.empleados.DTOUsuario;
+import mx.gob.tecdmx.tablerofirmas.api.login.ServiceLogin;
 import mx.gob.tecdmx.tablerofirmas.api.menu.ResponseBodyMenu;
 import mx.gob.tecdmx.tablerofirmas.api.menu.ServiceMenu;
 import mx.gob.tecdmx.tablerofirmas.entity.inst.InstEmpleado;
@@ -29,7 +32,9 @@ import mx.gob.tecdmx.tablerofirmas.utils.DTOResponse;
 
 @Service
 public class UserService implements UserDetailsService {
-
+	@Autowired
+	ServiceLogin serviceLogin;
+	
 	@Autowired
 	private SegOrgUsuariosRepository segOrgUsuariosRepository;
 	
@@ -38,6 +43,8 @@ public class UserService implements UserDetailsService {
 	
 	@Autowired
 	private ServiceMenu serviceMenu;
+	
+
 
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
@@ -88,8 +95,50 @@ public class UserService implements UserDetailsService {
         return response;
     }
     
-    
-    
-    
+    public DTOResponse createUser(DTOUsuario user, DTOResponse response) {
+    	
+    	SegOrgUsuarios usuarioStored = null;
+		if (user != null) {
+			//verifica que el correo proporcionado corresponda a un empleado en el sistema 
+			Optional<InstEmpleado>  empleado = instEmpleadoRepository.findByEmailInst(user.getEmail());
+			if(empleado.isPresent()) {
+				//verifica que el correo a utilizar no se encuentre en la bd de usuarios 
+				Optional<SegOrgUsuarios> usuarioEmail = segOrgUsuariosRepository.findBysEmail(user.getEmail());
+				if(usuarioEmail.isPresent()) {
+					response.setMessage("El correo utilizado corresponde a otra cuenta de usuario");
+					response.setStatus("Fail");
+					response.setData(null);
+					return response;
+					
+			}
+				//seteo de informacion para almacenar en bd
+				SegOrgUsuarios usuario = new SegOrgUsuarios();
+				
+				usuario.setsUsuario(user.getUsuario());
+				usuario.setsContrasenia(serviceLogin.encryptPassword(user.getContrasenia()));
+				usuario.setsDescUsuario(null);
+				usuario.setsEmail(user.getEmail());
+				usuario.setnIdEstadoUsuario(null);
+				usuario.setsToken(null);
+				usuarioStored = segOrgUsuariosRepository.save(usuario);
+				
+				//RELACIONA AL EMPLEADO CON EL USUARIO
+				empleado.get().setIdUsuario(usuarioStored);
+				instEmpleadoRepository.save(empleado.get());
+				
+				response.setData(usuarioStored);
+				response.setMessage("El usuario se han creado correctamente");
+				response.setStatus("Success");
+				return response;
+
+			}
+				
+		}
+		response.setMessage("No se pudo realizar el registro");
+		response.setStatus("Fail");
+		response.setData(null);
+		return response;
+    }
+	 
 
 }

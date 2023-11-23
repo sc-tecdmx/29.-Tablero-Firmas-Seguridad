@@ -11,5 +11,7 @@ import mx.gob.tecdmx.tablerofirmas.entity.seg.SegOrgUsuarios;
 @Repository
 public interface InstEmpleadoRepository extends CrudRepository<InstEmpleado, Integer> {
   Optional<InstEmpleado> findByIdUsuario(SegOrgUsuarios usuario);
+
+Optional<InstEmpleado> findByEmailInst(String email);
 	
 }

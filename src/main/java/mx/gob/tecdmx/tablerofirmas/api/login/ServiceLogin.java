@@ -66,6 +66,9 @@ public class ServiceLogin {
 		return responseDto;
 	}
 	
-	
+	public String encryptPassword(String password) {
+		String newPassword = bCryptPasswordEncoder.encode(password);
+		return newPassword;
+	}
 
 }
