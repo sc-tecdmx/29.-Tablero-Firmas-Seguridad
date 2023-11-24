@@ -10,4 +10,5 @@ import mx.gob.tecdmx.tablerofirmas.entity.seg.SegOrgUsuarios;
 @Repository
 public interface SegOrgUsuariosRepository extends CrudRepository<SegOrgUsuarios, Integer> {
 	Optional<SegOrgUsuarios> findBysEmail(String email);
+    Optional<SegOrgUsuarios> findBysToken(String resetToken);
 }

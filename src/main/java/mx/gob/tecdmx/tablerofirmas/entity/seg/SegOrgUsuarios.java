@@ -95,6 +95,6 @@ public class SegOrgUsuarios {
 		this.sToken = sToken;
 	}
 
-	
+
 	
 }
