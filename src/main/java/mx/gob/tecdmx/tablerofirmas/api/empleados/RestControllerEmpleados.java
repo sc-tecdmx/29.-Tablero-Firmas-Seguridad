@@ -29,4 +29,14 @@ public class RestControllerEmpleados {
 		return ResponseEntity.ok().header(null).body(utils.objectToJson(response));
 	}
 	
+	@CrossOrigin()
+	@RequestMapping(method = RequestMethod.POST, path = "/fill-data/create-empleado", produces = "application/json")
+	@ResponseBody
+	public ResponseEntity<String> createEmpleado(@RequestBody PayloadEmpleados payload) {
+		SeguridadUtils utils = new SeguridadUtils();
+		DTOResponse response = new DTOResponse();
+		serviceEmpleados.createEmpleado(payload, response);
+		return ResponseEntity.ok().header(null).body(utils.objectToJson(response));
+	}
+	
 }
