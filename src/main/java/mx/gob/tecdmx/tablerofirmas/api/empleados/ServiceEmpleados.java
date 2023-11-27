@@ -202,6 +202,23 @@ public class ServiceEmpleados {
 			response.setStatus("Fail");
 			return response;
 		}
+		if(payload.getEmailInst() != null) {
+			Optional<InstEmpleado> empleadoExistEmail = instEmpleadoRepository.findByEmailInst(payload.getEmailInst());
+			if(empleadoExistEmail.isPresent()) {
+				response.setMessage("Ya existe un registro con el correo institucional proporcionado");
+				response.setStatus("Fail");
+				return response;
+			}	
+		}
+		if(payload.getEmailPers() != null) {
+			Optional<InstEmpleado> empleadoExistEmail = instEmpleadoRepository.findByEmailPers(payload.getEmailPers());
+			if(empleadoExistEmail.isPresent()) {
+				response.setMessage("Ya existe un registro con el correo personal proporcionado");
+				response.setStatus("Fail");
+				return response;
+			}	
+		}
+		
 		Optional<InstCatSexo> sexo = instCatSexoRepository.findBySexo(payload.getCodigoSexo());
 		if (sexo.isPresent()) {
 			Optional<InstCatPuestos> puesto = instCatPuestosRepository

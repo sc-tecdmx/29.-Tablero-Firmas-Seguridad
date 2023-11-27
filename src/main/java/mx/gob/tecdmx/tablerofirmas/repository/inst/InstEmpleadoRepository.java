@@ -13,5 +13,7 @@ public interface InstEmpleadoRepository extends CrudRepository<InstEmpleado, Int
   Optional<InstEmpleado> findByIdUsuario(SegOrgUsuarios usuario);
 
 Optional<InstEmpleado> findByEmailInst(String email);
+
+Optional<InstEmpleado> findByEmailPers(String emailPers);
 	
 }
