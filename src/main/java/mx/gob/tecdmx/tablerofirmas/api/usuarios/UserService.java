@@ -15,7 +15,6 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import mx.gob.tecdmx.tablerofirmas.api.empleados.DTOUsuario;
@@ -47,8 +46,10 @@ public class UserService implements UserDetailsService {
 
 		Optional<SegOrgUsuarios> credentials = segOrgUsuariosRepository.findBysEmail(email);
 		if (!credentials.isPresent()) {
-			throw new UsernameNotFoundException(email);
-
+			credentials = segOrgUsuariosRepository.findBysUsuario(email);
+			if (!credentials.isPresent()) {
+				throw new UsernameNotFoundException(email);
+			}
 		}
 
 		SegOrgUsuarios user = credentials.get();

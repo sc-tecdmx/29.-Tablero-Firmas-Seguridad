@@ -69,7 +69,9 @@ public class TableroFirmasApplication extends SpringBootServletInitializer{
                     		"/api/seguridad/registrar-usuario",
                     		"/api/seguridad/fill-data/create-empleado",
                     		"/api/email/solicitud-reset-password",
-                    		"/api/email/reset-password"
+                    		"/api/email/reset-password",
+                    		"/api/seguridad/create-uadscripcion-areas",
+                    		"/api/seguridad/create-tipodoc-by-area"
                     ).permitAll()
                     .anyRequest().authenticated()
                     .and()
