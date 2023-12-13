@@ -11,9 +11,11 @@ import org.springframework.stereotype.Service;
 
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
-import mx.gob.tecdmx.tablerofirmas.entity.seg.SegOrgUsuarios;
-import mx.gob.tecdmx.tablerofirmas.repository.seg.SegOrgUsuariosRepository;
 import mx.gob.tecdmx.tablerofirmas.Constants;
+import mx.gob.tecdmx.tablerofirmas.entity.inst.InstEmpleado;
+import mx.gob.tecdmx.tablerofirmas.entity.seg.SegOrgUsuarios;
+import mx.gob.tecdmx.tablerofirmas.repository.inst.InstEmpleadoRepository;
+import mx.gob.tecdmx.tablerofirmas.repository.seg.SegOrgUsuariosRepository;
 
 @Service
 public class ServiceLogin {
@@ -23,10 +25,15 @@ public class ServiceLogin {
 
 	@Autowired
 	private SegOrgUsuariosRepository segOrgUsuariosRepository;
+	
+	@Autowired
+	InstEmpleadoRepository instEmpleadoRepository;
 
 	public DTOResponseLogin login(DTOPayloadLogin payload, HttpServletResponse response) {
 		Optional<SegOrgUsuarios> credentials = null;
 		credentials = segOrgUsuariosRepository.findBysEmail(payload.getEmail());
+		Optional<InstEmpleado> empleado = instEmpleadoRepository.findByIdUsuario(credentials.get());
+		
 		DTOResponseLogin responseDto = new DTOResponseLogin();
 		if (credentials.isPresent()) {
 			boolean coincide = bCryptPasswordEncoder.matches(payload.getPassword(),
@@ -38,6 +45,7 @@ public class ServiceLogin {
 						.signWith(SignatureAlgorithm.HS512, Constants.SUPER_SECRET_KEY).compact();
 				response.addHeader("email", credentials.get().getsEmail());
 				response.addHeader("nombre", credentials.get().getsUsuario());
+				response.addHeader("idEmpleado", empleado.get().getId()+"");
 				response.addHeader(Constants.HEADER_AUTHORIZACION_KEY, Constants.TOKEN_BEARER_PREFIX + " " + token);
 				responseDto.setStatus("success");
 				responseDto.setMessage("Autenticación exitosa");
@@ -58,6 +66,7 @@ public class ServiceLogin {
 							.signWith(SignatureAlgorithm.HS512, Constants.SUPER_SECRET_KEY).compact();
 					response.addHeader("email", credentials.get().getsEmail());
 					response.addHeader("nombre", credentials.get().getsUsuario());
+					response.addHeader("idEmpleado", empleado.get().getId()+"");
 					response.addHeader(Constants.HEADER_AUTHORIZACION_KEY, Constants.TOKEN_BEARER_PREFIX + " " + token);
 					responseDto.setStatus("success");
 					responseDto.setMessage("Autenticación exitosa");
