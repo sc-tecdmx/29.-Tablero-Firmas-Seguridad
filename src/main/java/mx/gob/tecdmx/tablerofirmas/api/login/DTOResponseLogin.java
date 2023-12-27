@@ -4,6 +4,7 @@ public class DTOResponseLogin {
 	String status;
 	String message;
 	String token;
+	Object data;
 	public String getStatus() {
 		return status;
 	}
@@ -22,6 +23,13 @@ public class DTOResponseLogin {
 	public void setToken(String token) {
 		this.token = token;
 	}
+	public Object getData() {
+		return data;
+	}
+	public void setData(Object data) {
+		this.data = data;
+	}
+	
 	
 	
 }

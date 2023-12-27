@@ -50,6 +50,7 @@ public class ServiceLogin {
 				responseDto.setStatus("success");
 				responseDto.setMessage("Autenticación exitosa");
 				responseDto.setToken(token);
+				responseDto.setData(empleado.get().getId());
 			} else {
 				responseDto.setStatus("failed");
 				responseDto.setMessage("Autenticación fallida");
