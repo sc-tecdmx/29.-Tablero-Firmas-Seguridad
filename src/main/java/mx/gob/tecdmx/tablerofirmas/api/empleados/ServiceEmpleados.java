@@ -12,6 +12,7 @@ import mx.gob.tecdmx.tablerofirmas.entity.inst.InstCatSexo;
 import mx.gob.tecdmx.tablerofirmas.entity.inst.InstEmpleado;
 import mx.gob.tecdmx.tablerofirmas.entity.inst.InstEmpleadoPuesto;
 import mx.gob.tecdmx.tablerofirmas.entity.inst.InstTitularUAdscripcion;
+import mx.gob.tecdmx.tablerofirmas.entity.inst.InstUAdscripcion;
 import mx.gob.tecdmx.tablerofirmas.entity.seg.SegCatEstadoUsuario;
 import mx.gob.tecdmx.tablerofirmas.entity.seg.SegOrgRoles;
 import mx.gob.tecdmx.tablerofirmas.entity.seg.SegOrgRolesUsuarios;
@@ -52,6 +53,9 @@ public class ServiceEmpleados {
 
 	@Autowired
 	InstTitularUAdscripcionRepository instTitularUAdscripcionRepository;
+	
+	@Autowired
+	InstUAdscripcionRepository instUAdscripcionRepository;
 
 	@Autowired
 	InstUAdscripcionRepository SegOrgUsuariosRepository;
@@ -195,30 +199,30 @@ public class ServiceEmpleados {
 	public DTOResponse createEmpleadoV2(PayloadEmpleados payload, DTOResponse response) {
 		SeguridadUtils utils = new SeguridadUtils();
 		ResponseBodyEmpleados resp = new ResponseBodyEmpleados();
-		
+
 		Optional<InstEmpleado> empleadoExist = instEmpleadoRepository.findById(payload.getIdNumEmpleado());
-		if(empleadoExist.isPresent()) {
+		if (empleadoExist.isPresent()) {
 			response.setMessage("Ya existe un registro con el número de empleado proporcionado");
 			response.setStatus("Fail");
 			return response;
 		}
-		if(payload.getEmailInst() != null) {
+		if (payload.getEmailInst() != null) {
 			Optional<InstEmpleado> empleadoExistEmail = instEmpleadoRepository.findByEmailInst(payload.getEmailInst());
-			if(empleadoExistEmail.isPresent()) {
+			if (empleadoExistEmail.isPresent()) {
 				response.setMessage("Ya existe un registro con el correo institucional proporcionado");
 				response.setStatus("Fail");
 				return response;
-			}	
+			}
 		}
-		if(payload.getEmailPers() != null) {
+		if (payload.getEmailPers() != null) {
 			Optional<InstEmpleado> empleadoExistEmail = instEmpleadoRepository.findByEmailPers(payload.getEmailPers());
-			if(empleadoExistEmail.isPresent()) {
+			if (empleadoExistEmail.isPresent()) {
 				response.setMessage("Ya existe un registro con el correo personal proporcionado");
 				response.setStatus("Fail");
 				return response;
-			}	
+			}
 		}
-		
+
 		Optional<InstCatSexo> sexo = instCatSexoRepository.findBySexo(payload.getCodigoSexo());
 		if (sexo.isPresent()) {
 			Optional<InstCatPuestos> puesto = instCatPuestosRepository
@@ -226,7 +230,7 @@ public class ServiceEmpleados {
 			if (puesto.isPresent()) {
 				Optional<InstCatAreas> area = instCatAreasRepository.findByAbrevArea(payload.getCodigoArea());
 				if (area.isPresent()) {
-					
+
 					InstEmpleado empleado = new InstEmpleado();
 					empleado.setId(payload.getIdNumEmpleado());
 					empleado.setNombre(payload.getNombre());
@@ -279,5 +283,49 @@ public class ServiceEmpleados {
 			response.setStatus("Fail");
 		}
 		return response;
+	}
+
+	public DTOResponse consultarEmpleado(int idEmpleado, DTOResponse response) {
+		DTOResponseEmpleado resp = new DTOResponseEmpleado();
+
+		Optional<InstEmpleado> empleadoExist = instEmpleadoRepository.findById(idEmpleado);
+		
+		if (!empleadoExist.isPresent()) {
+			response.setMessage("El usuario no existe");
+			response.setStatus("Fail");
+
+		} else {
+
+			Optional<InstEmpleadoPuesto> empleadoPuesto = instEmpleadoPuestoRepository.findByIdNumEmpleado(empleadoExist.get());
+			if (!empleadoPuesto.isPresent()) {
+				response.setMessage("No se pudo obtener el area y puesto del usuario");
+				response.setStatus("Fail");
+			}else {
+				
+				resp.setNombre(empleadoExist.get().getNombre());
+				resp.setApellido1(empleadoExist.get().getApellido1());
+				resp.setApellido2(empleadoExist.get().getApellido2());
+				resp.setCorreo(empleadoExist.get().getEmailInst());
+				
+				Optional<InstCatPuestos> puesto =instCatPuestosRepository.findById(empleadoPuesto.get().getIdPuesto().getId());
+				resp.setPuesto(puesto.get().getDescNombramiento());
+				
+				Optional<InstCatAreas> area = instCatAreasRepository.findById(empleadoPuesto.get().getIdCatArea().getId());
+				resp.setArea(area.get().getDescArea());
+				
+				Optional<InstUAdscripcion> unidadAds = instUAdscripcionRepository.findById(area.get().getIdUnAdscripcion().getId());
+				resp.setUnidadAdscripcion(unidadAds.get().getDescripcionUnidad());
+				
+				response.setMessage("Información del Empleado");
+				response.setStatus("success");
+				response.setData(resp);
+			}
+			
+		}
+		
+		return response;
+
+		// TODO Auto-generated method stub
+
 	}
 }

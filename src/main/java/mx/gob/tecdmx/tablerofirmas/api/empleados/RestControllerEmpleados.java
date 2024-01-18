@@ -3,6 +3,7 @@ package mx.gob.tecdmx.tablerofirmas.api.empleados;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
@@ -22,7 +23,7 @@ public class RestControllerEmpleados {
 	@CrossOrigin()
 	@RequestMapping(method = RequestMethod.POST, path = "/create-empleado", produces = "application/json")
 	@ResponseBody
-	public ResponseEntity<String> createMenu(@RequestBody PayloadEmpleados payload) {
+	public ResponseEntity<String> createEmpleado(@RequestBody PayloadEmpleados payload) {
 		SeguridadUtils utils = new SeguridadUtils();
 		DTOResponse response = new DTOResponse();
 		serviceEmpleados.createEmpleadoV2(payload, response);
@@ -30,9 +31,18 @@ public class RestControllerEmpleados {
 	}
 	
 	@CrossOrigin()
+	@RequestMapping(method = RequestMethod.GET, path = "/consultar-empleado/{idEmpleado}", produces = "application/json")
+	@ResponseBody
+	public ResponseEntity<DTOResponse> consultarEmpleado(@PathVariable("idEmpleado") int idEmpleado) {
+		DTOResponse response = new DTOResponse();
+		serviceEmpleados.consultarEmpleado(idEmpleado, response);
+		return ResponseEntity.ok().header(null).body(response);
+	}
+	
+	@CrossOrigin()
 	@RequestMapping(method = RequestMethod.POST, path = "/fill-data/create-empleado", produces = "application/json")
 	@ResponseBody
-	public ResponseEntity<String> createEmpleado(@RequestBody PayloadEmpleados payload) {
+	public ResponseEntity<String> createEmpleadoFillData(@RequestBody PayloadEmpleados payload) {
 		SeguridadUtils utils = new SeguridadUtils();
 		DTOResponse response = new DTOResponse();
 		serviceEmpleados.createEmpleado(payload, response);
