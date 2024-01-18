@@ -8,6 +8,7 @@ public class DTOResponseEmpleado {
 	String puesto;
 	String correo;
 	String unidadAdscripcion;
+	String pathFotografia;
 	
 	public String getNombre() {
 		return nombre;
@@ -51,6 +52,11 @@ public class DTOResponseEmpleado {
 	public void setUnidadAdscripcion(String unidadAdscripcion) {
 		this.unidadAdscripcion = unidadAdscripcion;
 	}
+	public String getPathFotografia() {
+		return pathFotografia;
+	}
+	public void setPathFotografia(String pathFotografia) {
+		this.pathFotografia = pathFotografia;
+	}
 	
-
 }

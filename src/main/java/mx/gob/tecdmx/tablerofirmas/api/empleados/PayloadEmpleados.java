@@ -19,6 +19,7 @@ public class PayloadEmpleados {
 	boolean esTitular;
 	String fechainicioTitular;
 	DTOUsuario usuario;
+	
 	public int getIdNumEmpleado() {
 		return idNumEmpleado;
 	}

@@ -306,6 +306,7 @@ public class ServiceEmpleados {
 				resp.setApellido1(empleadoExist.get().getApellido1());
 				resp.setApellido2(empleadoExist.get().getApellido2());
 				resp.setCorreo(empleadoExist.get().getEmailInst());
+				resp.setPathFotografia(empleadoExist.get().getPathFotografia());
 				
 				Optional<InstCatPuestos> puesto =instCatPuestosRepository.findById(empleadoPuesto.get().getIdPuesto().getId());
 				resp.setPuesto(puesto.get().getDescNombramiento());
