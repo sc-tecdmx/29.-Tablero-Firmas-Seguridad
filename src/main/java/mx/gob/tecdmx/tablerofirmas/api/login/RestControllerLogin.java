@@ -25,6 +25,13 @@ public class RestControllerLogin {
 	}
 	
 	@CrossOrigin()
+	@RequestMapping(method = RequestMethod.POST, path = "/login-escritorio", produces = "application/json")
+	@ResponseBody
+	public DTOResponseLogin loginEscritorio(@RequestBody DTOPayLoadLoginEscritorio payload, HttpServletResponse response) {
+		return loginService.loginEscritorio(payload, response);
+	}
+	
+	@CrossOrigin()
 	@RequestMapping(method = RequestMethod.PUT, path = "/update-password", produces = "application/json")
 	@ResponseBody
 	public DTOResponseLogin updatePassword(@RequestBody DTOPayloadLogin payload) {

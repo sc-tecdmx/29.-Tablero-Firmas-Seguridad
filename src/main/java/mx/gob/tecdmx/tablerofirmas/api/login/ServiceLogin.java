@@ -13,8 +13,10 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import mx.gob.tecdmx.tablerofirmas.Constants;
 import mx.gob.tecdmx.tablerofirmas.entity.inst.InstEmpleado;
+import mx.gob.tecdmx.tablerofirmas.entity.pki.PkiUsuariosCert;
 import mx.gob.tecdmx.tablerofirmas.entity.seg.SegOrgUsuarios;
 import mx.gob.tecdmx.tablerofirmas.repository.inst.InstEmpleadoRepository;
+import mx.gob.tecdmx.tablerofirmas.repository.pki.PkiUsuariosCertRepository;
 import mx.gob.tecdmx.tablerofirmas.repository.seg.SegOrgUsuariosRepository;
 
 @Service
@@ -25,15 +27,18 @@ public class ServiceLogin {
 
 	@Autowired
 	private SegOrgUsuariosRepository segOrgUsuariosRepository;
-	
+
 	@Autowired
 	InstEmpleadoRepository instEmpleadoRepository;
+
+	@Autowired
+	PkiUsuariosCertRepository pkiUsuariosCertRepository;
 
 	public DTOResponseLogin login(DTOPayloadLogin payload, HttpServletResponse response) {
 		Optional<SegOrgUsuarios> credentials = null;
 		credentials = segOrgUsuariosRepository.findBysEmail(payload.getEmail());
 		Optional<InstEmpleado> empleado = instEmpleadoRepository.findByIdUsuario(credentials.get());
-		
+
 		DTOResponseLogin responseDto = new DTOResponseLogin();
 		if (credentials.isPresent()) {
 			boolean coincide = bCryptPasswordEncoder.matches(payload.getPassword(),
@@ -45,7 +50,7 @@ public class ServiceLogin {
 						.signWith(SignatureAlgorithm.HS512, Constants.SUPER_SECRET_KEY).compact();
 				response.addHeader("email", credentials.get().getsEmail());
 				response.addHeader("nombre", credentials.get().getsUsuario());
-				response.addHeader("idEmpleado", empleado.get().getId()+"");
+				response.addHeader("idEmpleado", empleado.get().getId() + "");
 				response.addHeader(Constants.HEADER_AUTHORIZACION_KEY, Constants.TOKEN_BEARER_PREFIX + " " + token);
 				responseDto.setStatus("success");
 				responseDto.setMessage("Autenticación exitosa");
@@ -67,7 +72,7 @@ public class ServiceLogin {
 							.signWith(SignatureAlgorithm.HS512, Constants.SUPER_SECRET_KEY).compact();
 					response.addHeader("email", credentials.get().getsEmail());
 					response.addHeader("nombre", credentials.get().getsUsuario());
-					response.addHeader("idEmpleado", empleado.get().getId()+"");
+					response.addHeader("idEmpleado", empleado.get().getId() + "");
 					response.addHeader(Constants.HEADER_AUTHORIZACION_KEY, Constants.TOKEN_BEARER_PREFIX + " " + token);
 					responseDto.setStatus("success");
 					responseDto.setMessage("Autenticación exitosa");
@@ -96,6 +101,25 @@ public class ServiceLogin {
 		} else {
 			responseDto.setStatus("El usuario ingresado no se encuentra registrado");
 		}
+		return responseDto;
+	}
+
+	public DTOResponseLogin loginEscritorio(DTOPayLoadLoginEscritorio payload, HttpServletResponse response) {
+
+		DTOResponseLogin responseDto = new DTOResponseLogin();
+
+		//Optional<PkiUsuariosCert> usuCert = pkiUsuariosCertRepository.findByX509SerialNumber(payload.getNoSerie());
+		String token = Jwts.builder().setIssuedAt(new Date()).setIssuer(Constants.ISSUER_INFO)
+				.setSubject(payload.getEmail())
+				.setExpiration(new Date(System.currentTimeMillis() + Constants.TOKEN_EXPIRATION_TIME))
+				.signWith(SignatureAlgorithm.HS512, Constants.SUPER_SECRET_KEY).compact();
+		response.addHeader("email", payload.getEmail());
+		response.addHeader("nombre", payload.getNombre());
+		response.addHeader("idEmpleado", payload.getIdEmpleado());
+		response.addHeader(Constants.HEADER_AUTHORIZACION_KEY, Constants.TOKEN_BEARER_PREFIX + " " + token);
+		responseDto.setStatus("success");
+		responseDto.setMessage("Autenticación exitosa");
+		responseDto.setToken(token);
 		return responseDto;
 	}
 
