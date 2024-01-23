@@ -250,6 +250,7 @@ public class ServiceEmpleados {
 					empleadoPuesto.setIdPuesto(puesto.get());
 					empleadoPuesto.setFechaAlta(utils.formatDate(payload.getFechaAltaEmpleado()));
 					empleadoPuesto.setFechaConclusion(null);
+					empleadoPuesto.setActivo(true);
 
 					instEmpleadoPuestoRepository.save(empleadoPuesto);
 					response.setMessage("El empleado se ha creado correctamente");

@@ -45,6 +45,9 @@ public class PkiDocumentoFirmantes {
   
 	@Column(name = "fecha_firma")
 	Date  fechaFirma;
+	
+	@Column(name="s_descripcion")  
+	String descripcion;
   
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name="id_tipo_firma", referencedColumnName="id_tipo_firma")
@@ -135,6 +138,14 @@ public class PkiDocumentoFirmantes {
 
 	public void setCadenaFirma(String cadenaFirma) {
 		this.cadenaFirma = cadenaFirma;
+	}
+
+	public String getDescripcion() {
+		return descripcion;
+	}
+
+	public void setDescripcion(String descripcion) {
+		this.descripcion = descripcion;
 	}
 
 	
