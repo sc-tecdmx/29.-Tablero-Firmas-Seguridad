@@ -31,6 +31,25 @@ public class RestControllerEmpleados {
 	}
 	
 	@CrossOrigin()
+	@RequestMapping(method = RequestMethod.PUT, path = "/editar-empleado/{idEmpleado}", produces = "application/json")
+	@ResponseBody
+	public ResponseEntity<String> editarEmpleado(@PathVariable("idEmpleado") int idEmpleado,@RequestBody PayloaEditardEmpleados payload) {
+		SeguridadUtils utils = new SeguridadUtils();
+		DTOResponse response = new DTOResponse();
+		serviceEmpleados.editarEmpleado(idEmpleado,payload, response);
+		return ResponseEntity.ok().header(null).body(utils.objectToJson(response));
+	}
+	
+	@CrossOrigin()
+	@RequestMapping(method = RequestMethod.DELETE, path = "/eliminar-empleado/{idEmpleado}", produces = "application/json")
+	@ResponseBody
+	public ResponseEntity<DTOResponse> eliminarEmpleado(@PathVariable("idEmpleado") int idEmpleado) {
+		DTOResponse response = new DTOResponse();
+		serviceEmpleados.eliminarEmpleado(idEmpleado, response);
+		return ResponseEntity.ok().header(null).body(response);
+	}
+	
+	@CrossOrigin()
 	@RequestMapping(method = RequestMethod.GET, path = "/consultar-empleado/{idEmpleado}", produces = "application/json")
 	@ResponseBody
 	public ResponseEntity<DTOResponse> consultarEmpleado(@PathVariable("idEmpleado") int idEmpleado) {

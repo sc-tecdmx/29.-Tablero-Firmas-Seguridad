@@ -35,11 +35,18 @@ public class ServiceLogin {
 	PkiUsuariosCertRepository pkiUsuariosCertRepository;
 
 	public DTOResponseLogin login(DTOPayloadLogin payload, HttpServletResponse response) {
+		DTOResponseLogin responseDto = new DTOResponseLogin();
+		
 		Optional<SegOrgUsuarios> credentials = null;
 		credentials = segOrgUsuariosRepository.findBysEmail(payload.getEmail());
 		Optional<InstEmpleado> empleado = instEmpleadoRepository.findByIdUsuario(credentials.get());
-
-		DTOResponseLogin responseDto = new DTOResponseLogin();
+		
+		if(!empleado.get().isActivo()) {
+			responseDto.setStatus("failed");
+			responseDto.setMessage("Esta cuenta ya no se encuentra activa");
+			return responseDto;
+		}
+		
 		if (credentials.isPresent()) {
 			boolean coincide = bCryptPasswordEncoder.matches(payload.getPassword(),
 					credentials.get().getsContrasenia());
@@ -107,6 +114,16 @@ public class ServiceLogin {
 	public DTOResponseLogin loginEscritorio(DTOPayLoadLoginEscritorio payload, HttpServletResponse response) {
 
 		DTOResponseLogin responseDto = new DTOResponseLogin();
+		
+		Optional<SegOrgUsuarios> credentials = null;
+		credentials = segOrgUsuariosRepository.findBysEmail(payload.getEmail());
+		Optional<InstEmpleado> empleado = instEmpleadoRepository.findByIdUsuario(credentials.get());
+		
+		if(!empleado.get().isActivo()) {
+			responseDto.setStatus("failed");
+			responseDto.setMessage("No cuenta con permisos para firmar por que su cuenta ya no se encuentra activa");
+			return responseDto;
+		}
 
 		//Optional<PkiUsuariosCert> usuCert = pkiUsuariosCertRepository.findByX509SerialNumber(payload.getNoSerie());
 		String token = Jwts.builder().setIssuedAt(new Date()).setIssuer(Constants.ISSUER_INFO)

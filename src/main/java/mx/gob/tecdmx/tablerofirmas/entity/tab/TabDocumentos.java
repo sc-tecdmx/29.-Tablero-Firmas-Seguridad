@@ -43,6 +43,9 @@ public class TabDocumentos {
   
 	@Column(name = "folio_especial")
 	String  folioEspecial;
+	
+	@Column(name = "visible")
+	boolean  visible;
   
 	@Column(name = "creacion_documento_fecha")
 	Date  creacionDocumentoFecha;
@@ -196,6 +199,14 @@ public class TabDocumentos {
 		this.hashDocumento = hashDocumento;
 	}
 
+	public boolean isVisible() {
+		return visible;
+	}
+
+	public void setVisible(boolean visible) {
+		this.visible = visible;
+	}
+	
 	
 	
 }
