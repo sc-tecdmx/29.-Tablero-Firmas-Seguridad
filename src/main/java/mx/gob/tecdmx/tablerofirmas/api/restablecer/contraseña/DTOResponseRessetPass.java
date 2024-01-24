@@ -1,4 +1,4 @@
-package mx.gob.tecdmx.tablerofirmas.api.email;
+package mx.gob.tecdmx.tablerofirmas.api.restablecer.contraseña;
 
 public class DTOResponseRessetPass {
 	String status;

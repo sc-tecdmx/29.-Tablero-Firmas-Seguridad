@@ -1,4 +1,4 @@
-package mx.gob.tecdmx.tablerofirmas.api.email;
+package mx.gob.tecdmx.tablerofirmas.api.restablecer.contraseña;
 
 import java.util.Optional;
 import java.util.UUID;
@@ -22,7 +22,7 @@ import mx.gob.tecdmx.tablerofirmas.utils.SeguridadUtils;
 
 @RestController
 @RequestMapping("/api/email")
-public class RestControllerEmail {
+public class RestControllerRessetPassword {
 
 	@Autowired
 	ServiceLogin serviceLogin;
@@ -31,7 +31,7 @@ public class RestControllerEmail {
 	private SegOrgUsuariosRepository userRepository;
 
 	@Autowired
-	private EmailService emailService; // You need to implement this service
+	private ServiceRessetPassword emailService; // You need to implement this service
 
 	@CrossOrigin()
 	@RequestMapping(method = RequestMethod.POST, path = "/solicitud-reset-password", produces = "application/json")
