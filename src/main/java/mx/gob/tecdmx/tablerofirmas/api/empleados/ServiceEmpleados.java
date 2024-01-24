@@ -1,6 +1,8 @@
 package mx.gob.tecdmx.tablerofirmas.api.empleados;
 
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,6 +15,9 @@ import mx.gob.tecdmx.tablerofirmas.entity.inst.InstEmpleado;
 import mx.gob.tecdmx.tablerofirmas.entity.inst.InstEmpleadoPuesto;
 import mx.gob.tecdmx.tablerofirmas.entity.inst.InstTitularUAdscripcion;
 import mx.gob.tecdmx.tablerofirmas.entity.inst.InstUAdscripcion;
+import mx.gob.tecdmx.tablerofirmas.entity.pki.PkiUsuariosCert;
+import mx.gob.tecdmx.tablerofirmas.entity.pki.PkiX509AcAutorizadas;
+import mx.gob.tecdmx.tablerofirmas.entity.pki.PkiX509Registrados;
 import mx.gob.tecdmx.tablerofirmas.entity.seg.SegCatEstadoUsuario;
 import mx.gob.tecdmx.tablerofirmas.entity.seg.SegOrgRoles;
 import mx.gob.tecdmx.tablerofirmas.entity.seg.SegOrgRolesUsuarios;
@@ -25,6 +30,9 @@ import mx.gob.tecdmx.tablerofirmas.repository.inst.InstEmpleadoPuestoRepository;
 import mx.gob.tecdmx.tablerofirmas.repository.inst.InstEmpleadoRepository;
 import mx.gob.tecdmx.tablerofirmas.repository.inst.InstTitularUAdscripcionRepository;
 import mx.gob.tecdmx.tablerofirmas.repository.inst.InstUAdscripcionRepository;
+import mx.gob.tecdmx.tablerofirmas.repository.pki.PkiUsuariosCertRepository;
+import mx.gob.tecdmx.tablerofirmas.repository.pki.PkiX509AcAutorizadasRepository;
+import mx.gob.tecdmx.tablerofirmas.repository.pki.PkiX509RegistradosRepository;
 import mx.gob.tecdmx.tablerofirmas.repository.seg.SegCatEstadoUsuarioRepository;
 import mx.gob.tecdmx.tablerofirmas.repository.seg.SegOrgRolesRepository;
 import mx.gob.tecdmx.tablerofirmas.repository.seg.SegOrgRolesUsuariosRepository;
@@ -71,6 +79,15 @@ public class ServiceEmpleados {
 
 	@Autowired
 	SegOrgRolesUsuariosRepository segOrgRolesUsuariosRepository;
+	
+	@Autowired
+	PkiX509RegistradosRepository pkiX509RegistradosRepository;
+	
+	@Autowired
+	PkiUsuariosCertRepository pkiUsuariosCertRepository;
+	
+	@Autowired
+	PkiX509AcAutorizadasRepository pkiX509AcAutorizadasRepository;
 
 	public DTOResponse createEmpleado(PayloadEmpleados payload, DTOResponse response) {
 		SeguridadUtils utils = new SeguridadUtils();
@@ -376,9 +393,9 @@ public class ServiceEmpleados {
 
 	public DTOResponse consultarEmpleado(int idEmpleado, DTOResponse response) {
 		DTOResponseEmpleado resp = new DTOResponseEmpleado();
-
+		List<DTOCertificado>  certificados = new ArrayList<DTOCertificado> ();
 		Optional<InstEmpleado> empleadoExist = instEmpleadoRepository.findById(idEmpleado);
-
+		DTOCertificado dtoCert = null;
 		if (!empleadoExist.isPresent()) {
 			response.setMessage("El empleado no existe");
 			response.setStatus("Fail");
@@ -395,7 +412,21 @@ public class ServiceEmpleados {
 				response.setMessage("No se pudo obtener el area y puesto del usuario");
 				response.setStatus("Fail");
 			} else {
-
+				
+				if(empleadoExist.get().getIdUsuario() != null) {
+				  List<PkiUsuariosCert> cerUsu = pkiUsuariosCertRepository.findByIdUsuarioFirma(empleadoExist.get().getIdUsuario());
+				  for(PkiUsuariosCert certVinculado: cerUsu) {
+					  Optional<PkiX509Registrados> certificadoInfo = pkiX509RegistradosRepository.findByX509SerialNumber(certVinculado.getX509SerialNumber().getX509SerialNumber());
+					  Optional<PkiX509AcAutorizadas> acAutorizada= pkiX509AcAutorizadasRepository.findByX509EmisorSerial(certificadoInfo.get().getX509EmisorSerial().getX509EmisorSerial());
+					  dtoCert= new DTOCertificado();
+					  dtoCert.setFchRegistro(certificadoInfo.get().getFechaFegistro().toString());
+					  dtoCert.setFchRevocación(certificadoInfo.get().getFechaRevocacion().toString());
+					  dtoCert.setNoSerie(certificadoInfo.get().getX509SerialNumber());
+					  dtoCert.setEmisor(acAutorizada.get().getX509EmisorAutoridad());
+					  certificados.add(dtoCert);
+				  }
+				  resp.setCertificados(certificados);
+				}
 				resp.setNombre(empleadoExist.get().getNombre());
 				resp.setApellido1(empleadoExist.get().getApellido1());
 				resp.setApellido2(empleadoExist.get().getApellido2());
@@ -417,6 +448,7 @@ public class ServiceEmpleados {
 				response.setMessage("Información del Empleado");
 				response.setStatus("success");
 				response.setData(resp);
+				
 			}
 
 		}

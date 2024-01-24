@@ -1,5 +1,7 @@
 package mx.gob.tecdmx.tablerofirmas.api.empleados;
 
+import java.util.List;
+
 public class DTOResponseEmpleado {
 	String nombre;
 	String apellido1;
@@ -9,6 +11,7 @@ public class DTOResponseEmpleado {
 	String correo;
 	String unidadAdscripcion;
 	String pathFotografia;
+	List<DTOCertificado> certificados ;
 	
 	public String getNombre() {
 		return nombre;
@@ -57,6 +60,12 @@ public class DTOResponseEmpleado {
 	}
 	public void setPathFotografia(String pathFotografia) {
 		this.pathFotografia = pathFotografia;
+	}
+	public List<DTOCertificado> getCertificados() {
+		return certificados;
+	}
+	public void setCertificados(List<DTOCertificado> certificados) {
+		this.certificados = certificados;
 	}
 	
 }
