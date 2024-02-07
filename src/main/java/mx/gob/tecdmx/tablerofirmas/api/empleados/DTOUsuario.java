@@ -5,6 +5,7 @@ public class DTOUsuario {
 	String contrasenia;
 	String estatusCuenta;
 	String codigoRol;
+	String rolAnterior;
 	String email;
 	
 	public String getUsuario() {
@@ -37,5 +38,12 @@ public class DTOUsuario {
 	public void setEmail(String email) {
 		this.email = email;
 	}
+	public String getRolAnterior() {
+		return rolAnterior;
+	}
+	public void setRolAnterior(String rolAnterior) {
+		this.rolAnterior = rolAnterior;
+	}
+	
 	
 }

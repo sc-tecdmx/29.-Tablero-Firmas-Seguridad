@@ -32,11 +32,29 @@ public class RestControllerUsuarios {
 	@CrossOrigin()
 	@RequestMapping(method = RequestMethod.POST, path = "/registrar-usuario", produces = "application/json")
 	@ResponseBody
-	public ResponseEntity<String> createUsuario(@RequestBody DTOUsuario user) {
+	public ResponseEntity<String> createUsuario(@RequestBody DTOUsuario user, Authentication auth) {
 		SeguridadUtils utils = new SeguridadUtils();
 		DTOResponse response = new DTOResponse();
-		userService.createUser(user, response);
+		userService.createUser(user, response, auth);
 		return ResponseEntity.ok().header(null).body(utils.objectToJson(response));
+	}
+	
+	@CrossOrigin()
+	@RequestMapping(method = RequestMethod.POST, path = "/editar-usuario", produces = "application/json")
+	@ResponseBody
+	public ResponseEntity<String> editarUsuario(@RequestBody DTOUsuario user, Authentication auth) {
+		SeguridadUtils utils = new SeguridadUtils();
+		DTOResponse response = new DTOResponse();
+		userService.editarUser(user, response, auth);
+		return ResponseEntity.ok().header(null).body(utils.objectToJson(response));
+	}
+	
+	@CrossOrigin()
+	@RequestMapping(method = RequestMethod.GET, path = "/users-rol", produces = "application/json")
+	@ResponseBody
+	public DTOResponse getusuarios() {
+		DTOResponse response = new DTOResponse();
+		return userService.getUsuarios(response);
 	}
 	
 	

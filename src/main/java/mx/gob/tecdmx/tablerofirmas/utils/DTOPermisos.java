@@ -1,4 +1,4 @@
-package mx.gob.tecdmx.tablerofirmas.api.menu;
+package mx.gob.tecdmx.tablerofirmas.utils;
 
 public class DTOPermisos {
 	String codigoRol;

@@ -13,6 +13,8 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import mx.gob.tecdmx.tablerofirmas.utils.DTOResponse;
+import mx.gob.tecdmx.tablerofirmas.utils.PayloadMenu;
+import mx.gob.tecdmx.tablerofirmas.utils.ResponseBodyMenu;
 import mx.gob.tecdmx.tablerofirmas.utils.SeguridadUtils;
 
 @RestController
@@ -32,10 +34,10 @@ public class RestControllerMenu {
 	@CrossOrigin()
 	@RequestMapping(method = RequestMethod.POST, path = "/create-menu", produces = "application/json")
 	@ResponseBody
-	public ResponseEntity<String> createMenu(@RequestBody PayloadMenu payload) {
+	public ResponseEntity<String> createMenu(@RequestBody PayloadMenu payload, Authentication auth) {
 		SeguridadUtils utils = new SeguridadUtils();
 		DTOResponse response = new DTOResponse();
-		menuService.createMenu(payload, response);
+		menuService.createMenu(payload, response, auth);
 		return ResponseEntity.ok().header(null).body(utils.objectToJson(response));
 	}
 	

@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 
 import mx.gob.tecdmx.tablerofirmas.entity.inst.InstCatAreas;
@@ -13,12 +14,14 @@ import mx.gob.tecdmx.tablerofirmas.entity.inst.InstCatPuestos;
 import mx.gob.tecdmx.tablerofirmas.entity.inst.InstCatSexo;
 import mx.gob.tecdmx.tablerofirmas.entity.inst.InstEmpleado;
 import mx.gob.tecdmx.tablerofirmas.entity.inst.InstEmpleadoPuesto;
+import mx.gob.tecdmx.tablerofirmas.entity.inst.InstLogEmpleado;
 import mx.gob.tecdmx.tablerofirmas.entity.inst.InstTitularUAdscripcion;
 import mx.gob.tecdmx.tablerofirmas.entity.inst.InstUAdscripcion;
 import mx.gob.tecdmx.tablerofirmas.entity.pki.PkiUsuariosCert;
 import mx.gob.tecdmx.tablerofirmas.entity.pki.PkiX509AcAutorizadas;
 import mx.gob.tecdmx.tablerofirmas.entity.pki.PkiX509Registrados;
 import mx.gob.tecdmx.tablerofirmas.entity.seg.SegCatEstadoUsuario;
+import mx.gob.tecdmx.tablerofirmas.entity.seg.SegOrgLogSesion;
 import mx.gob.tecdmx.tablerofirmas.entity.seg.SegOrgRoles;
 import mx.gob.tecdmx.tablerofirmas.entity.seg.SegOrgRolesUsuarios;
 import mx.gob.tecdmx.tablerofirmas.entity.seg.SegOrgUsuarioEstadoUsuario;
@@ -28,18 +31,21 @@ import mx.gob.tecdmx.tablerofirmas.repository.inst.InstCatPuestosRepository;
 import mx.gob.tecdmx.tablerofirmas.repository.inst.InstCatSexoRepository;
 import mx.gob.tecdmx.tablerofirmas.repository.inst.InstEmpleadoPuestoRepository;
 import mx.gob.tecdmx.tablerofirmas.repository.inst.InstEmpleadoRepository;
+import mx.gob.tecdmx.tablerofirmas.repository.inst.InstLogEmpleadoRepository;
 import mx.gob.tecdmx.tablerofirmas.repository.inst.InstTitularUAdscripcionRepository;
 import mx.gob.tecdmx.tablerofirmas.repository.inst.InstUAdscripcionRepository;
 import mx.gob.tecdmx.tablerofirmas.repository.pki.PkiUsuariosCertRepository;
 import mx.gob.tecdmx.tablerofirmas.repository.pki.PkiX509AcAutorizadasRepository;
 import mx.gob.tecdmx.tablerofirmas.repository.pki.PkiX509RegistradosRepository;
 import mx.gob.tecdmx.tablerofirmas.repository.seg.SegCatEstadoUsuarioRepository;
+import mx.gob.tecdmx.tablerofirmas.repository.seg.SegOrgLogSesionRepository;
 import mx.gob.tecdmx.tablerofirmas.repository.seg.SegOrgRolesRepository;
 import mx.gob.tecdmx.tablerofirmas.repository.seg.SegOrgRolesUsuariosRepository;
 import mx.gob.tecdmx.tablerofirmas.repository.seg.SegOrgUsuarioEstadoUsuarioRepository;
 import mx.gob.tecdmx.tablerofirmas.repository.seg.SegOrgUsuariosRepository;
 import mx.gob.tecdmx.tablerofirmas.utils.DTOResponse;
 import mx.gob.tecdmx.tablerofirmas.utils.SeguridadUtils;
+import mx.gob.tecdmx.tablerofirmas.utils.VOUsuario;
 
 @Service
 public class ServiceEmpleados {
@@ -64,6 +70,9 @@ public class ServiceEmpleados {
 
 	@Autowired
 	InstUAdscripcionRepository instUAdscripcionRepository;
+	
+	@Autowired
+	InstLogEmpleadoRepository instLogEmpleadoRepository;
 
 	@Autowired
 	SegOrgUsuariosRepository segOrgUsuariosRepository;
@@ -73,6 +82,9 @@ public class ServiceEmpleados {
 
 	@Autowired
 	SegOrgUsuarioEstadoUsuarioRepository segOrgUsuarioEstadoUsuarioRepository;
+	
+	@Autowired
+	SegOrgLogSesionRepository segOrgLogSesionRepository;
 
 	@Autowired
 	SegOrgRolesRepository segOrgRolesRepository;
@@ -131,8 +143,8 @@ public class ServiceEmpleados {
 										.findByEtiquetaRol(payload.getUsuario().getCodigoRol());
 								if (rol.isPresent()) {
 									SegOrgRolesUsuarios rolesUsuarios = new SegOrgRolesUsuarios();
-									rolesUsuarios.setnIdRol(rol.get());
-									rolesUsuarios.setnIdUsuario(usuarioStored);
+									rolesUsuarios.setIdRol(rol.get());
+									rolesUsuarios.setIdUsuario(usuarioStored);
 									rolesUsuarios.setnIdUAdscripcion(area.get().getIdUnAdscripcion());
 									rolesUsuarios.setnSessionId(null);
 
@@ -210,7 +222,12 @@ public class ServiceEmpleados {
 		return response;
 	}
 
-	public DTOResponse createEmpleadoV2(PayloadEmpleados payload, DTOResponse response) {
+	public DTOResponse createEmpleadoV2(PayloadEmpleados payload, DTOResponse response, Authentication auth) {
+		
+		VOUsuario usuarioVO = (VOUsuario) auth.getDetails();
+		Optional<SegOrgLogSesion> sesionExist =segOrgLogSesionRepository.findById(Integer.parseInt(usuarioVO.getIdSession()));
+		
+		
 		SeguridadUtils utils = new SeguridadUtils();
 		ResponseBodyEmpleados resp = new ResponseBodyEmpleados();
 
@@ -270,6 +287,16 @@ public class ServiceEmpleados {
 					empleadoPuesto.setActivo(true);
 
 					instEmpleadoPuestoRepository.save(empleadoPuesto);
+					
+					//almacena el Log del empleado
+					InstLogEmpleado logEmpleado = new InstLogEmpleado();
+					Optional<InstEmpleado> empleadoLog = instEmpleadoRepository.findByEmailInst(usuarioVO.getEmail());
+					logEmpleado.setIdNumEmpleado(empleadoLog.get());
+					logEmpleado.setSessionId(sesionExist.get());
+					logEmpleado.setBitacora("creado");
+					instLogEmpleadoRepository.save(logEmpleado);
+					
+					
 					response.setMessage("El empleado se ha creado correctamente");
 					response.setStatus("Success");
 
@@ -301,7 +328,11 @@ public class ServiceEmpleados {
 		return response;
 	}
 
-	public DTOResponse editarEmpleado(int numEmpleado, PayloaEditardEmpleados payload, DTOResponse response) {
+	public DTOResponse editarEmpleado(int numEmpleado, PayloaEditardEmpleados payload, DTOResponse response, Authentication auth ) {
+		VOUsuario usuarioVO = (VOUsuario) auth.getDetails();
+		Optional<SegOrgLogSesion> sesionExist =segOrgLogSesionRepository.findById(Integer.parseInt(usuarioVO.getIdSession()));
+		
+		
 		SeguridadUtils utils = new SeguridadUtils();
 
 		Optional<InstEmpleado> empleadoExist = instEmpleadoRepository.findById(numEmpleado);
@@ -333,6 +364,14 @@ public class ServiceEmpleados {
 				empleado.setPathFotografia(payload.getPathFotografia());
 				InstEmpleado empleadoStored = instEmpleadoRepository.save(empleado);
 
+				//almacena el Log del empleado
+				InstLogEmpleado logEmpleado = new InstLogEmpleado();
+				Optional<InstEmpleado> empleadoLog = instEmpleadoRepository.findByEmailInst(usuarioVO.getEmail());
+				logEmpleado.setIdNumEmpleado(empleadoLog.get());
+				logEmpleado.setSessionId(sesionExist.get());
+				logEmpleado.setBitacora("editado");
+				instLogEmpleadoRepository.save(logEmpleado);
+				
 				response.setMessage("Se han editado los datos correctamente");
 				response.setStatus("Success");
 
@@ -346,8 +385,10 @@ public class ServiceEmpleados {
 		return response;
 	}
 
-	public DTOResponse eliminarEmpleado(int idEmpleado, DTOResponse response) {
-
+	public DTOResponse eliminarEmpleado(int idEmpleado, DTOResponse response, Authentication auth) {
+		VOUsuario usuarioVO = (VOUsuario) auth.getDetails();
+		Optional<SegOrgLogSesion> sesionExist =segOrgLogSesionRepository.findById(Integer.parseInt(usuarioVO.getIdSession()));
+		
 		Optional<InstEmpleado> empleadoExist = instEmpleadoRepository.findById(idEmpleado);
 
 		if (!empleadoExist.isPresent()) {
@@ -379,6 +420,14 @@ public class ServiceEmpleados {
 				empleadoPuesto.get().setActivo(false);
 				instEmpleadoPuestoRepository.save(empleadoPuesto.get());
 
+				//almacena el Log del empleado
+				InstLogEmpleado logEmpleado = new InstLogEmpleado();
+				Optional<InstEmpleado> empleadoLog = instEmpleadoRepository.findByEmailInst(usuarioVO.getEmail());
+				logEmpleado.setIdNumEmpleado(empleadoLog.get());
+				logEmpleado.setSessionId(sesionExist.get());
+				logEmpleado.setBitacora("eliminado");
+				instLogEmpleadoRepository.save(logEmpleado);
+				
 				response.setMessage("Empleado eliminado");
 				response.setStatus("success");
 			}

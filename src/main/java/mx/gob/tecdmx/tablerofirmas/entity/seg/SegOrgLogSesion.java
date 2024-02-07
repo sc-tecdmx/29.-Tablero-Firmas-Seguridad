@@ -21,7 +21,7 @@ public class SegOrgLogSesion {
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	@Basic(optional = false)
 	@Column(name = "n_session_id", unique = true, nullable = false)
-	int  n_session_id;
+	int  id;
   
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name="n_id_usuario", referencedColumnName="n_id_usuario")
@@ -34,18 +34,19 @@ public class SegOrgLogSesion {
 	Date  d_fecha_fin;
   
 	@Column(name = "n_end_sesion")
-	int  n_end_sesion;
+	long  n_end_sesion;
   
 	@OneToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name="chain_n_session_id", referencedColumnName="n_session_id")
 	SegOrgLogSesion chain_n_session_id;
 
-	public int getN_session_id() {
-		return n_session_id;
+	
+	public int getId() {
+		return id;
 	}
 
-	public void setN_session_id(int n_session_id) {
-		this.n_session_id = n_session_id;
+	public void setId(int id) {
+		this.id = id;
 	}
 
 	public SegOrgUsuarios getN_id_usuario() {
@@ -72,11 +73,11 @@ public class SegOrgLogSesion {
 		this.d_fecha_fin = d_fecha_fin;
 	}
 
-	public int getN_end_sesion() {
+	public long getN_end_sesion() {
 		return n_end_sesion;
 	}
 
-	public void setN_end_sesion(int n_end_sesion) {
+	public void setN_end_sesion(long n_end_sesion) {
 		this.n_end_sesion = n_end_sesion;
 	}
 

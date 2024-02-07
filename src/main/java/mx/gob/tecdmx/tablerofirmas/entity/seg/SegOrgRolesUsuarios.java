@@ -22,11 +22,11 @@ public class SegOrgRolesUsuarios {
 	
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name="n_id_rol", referencedColumnName="n_id_rol")
-	SegOrgRoles  nIdRol;
+	SegOrgRoles  idRol;
   
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name="n_id_usuario", referencedColumnName="n_id_usuario")
-	SegOrgUsuarios  nIdUsuario;
+	SegOrgUsuarios  idUsuario;
   
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name="n_id_u_adscripcion", referencedColumnName="n_id_u_adscripcion")
@@ -44,20 +44,20 @@ public class SegOrgRolesUsuarios {
 		this.id = id;
 	}
 
-	public SegOrgRoles getnIdRol() {
-		return nIdRol;
+	public SegOrgRoles getIdRol() {
+		return idRol;
 	}
 
-	public void setnIdRol(SegOrgRoles nIdRol) {
-		this.nIdRol = nIdRol;
+	public void setIdRol(SegOrgRoles idRol) {
+		this.idRol = idRol;
 	}
 
-	public SegOrgUsuarios getnIdUsuario() {
-		return nIdUsuario;
+	public SegOrgUsuarios getIdUsuario() {
+		return idUsuario;
 	}
 
-	public void setnIdUsuario(SegOrgUsuarios nIdUsuario) {
-		this.nIdUsuario = nIdUsuario;
+	public void setIdUsuario(SegOrgUsuarios idUsuario) {
+		this.idUsuario = idUsuario;
 	}
 
 	public InstUAdscripcion getnIdUAdscripcion() {

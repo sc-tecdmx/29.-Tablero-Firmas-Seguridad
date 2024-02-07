@@ -40,7 +40,8 @@ public class JWTAuthorizationFilter extends BasicAuthenticationFilter {
             return;
         }
         UsernamePasswordAuthenticationToken authentication = getAuthentication(req);
-        UserDetails userDetail = userv.loadUserByUsername(authentication.getName());
+        String idSession = getIdSession(req);
+        UserDetails userDetail = userv.loadUserByUsername(authentication.getName()+":"+idSession);
         authentication.setDetails(userDetail);
         SecurityContextHolder.getContext().setAuthentication(authentication);
         chain.doFilter(req, res);
@@ -57,6 +58,23 @@ public class JWTAuthorizationFilter extends BasicAuthenticationFilter {
                     .getSubject();
             if (user != null) {
                 return new UsernamePasswordAuthenticationToken(user, null, new ArrayList<>());
+            }
+            return null;
+        }
+        return null;
+    }
+    
+    private String getIdSession(HttpServletRequest request) {
+        String token = request.getHeader(Constants.HEADER_AUTHORIZACION_KEY);
+        if (token != null) {
+            // Se procesa el token y se recupera el usuario.
+            String idSession = Jwts.parser()
+                    .setSigningKey(Constants.SUPER_SECRET_KEY)
+                    .parseClaimsJws(token.replace(Constants.TOKEN_BEARER_PREFIX, ""))
+                    .getBody()
+                    .getId();
+            if (idSession != null) {
+                return idSession;
             }
             return null;
         }

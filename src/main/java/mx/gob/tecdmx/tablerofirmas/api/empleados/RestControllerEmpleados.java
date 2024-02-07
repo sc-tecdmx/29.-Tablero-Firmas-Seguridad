@@ -2,6 +2,7 @@ package mx.gob.tecdmx.tablerofirmas.api.empleados;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -23,29 +24,29 @@ public class RestControllerEmpleados {
 	@CrossOrigin()
 	@RequestMapping(method = RequestMethod.POST, path = "/create-empleado", produces = "application/json")
 	@ResponseBody
-	public ResponseEntity<String> createEmpleado(@RequestBody PayloadEmpleados payload) {
+	public ResponseEntity<String> createEmpleado(@RequestBody PayloadEmpleados payload, Authentication auth) {
 		SeguridadUtils utils = new SeguridadUtils();
 		DTOResponse response = new DTOResponse();
-		serviceEmpleados.createEmpleadoV2(payload, response);
+		serviceEmpleados.createEmpleadoV2(payload, response, auth);
 		return ResponseEntity.ok().header(null).body(utils.objectToJson(response));
 	}
 	
 	@CrossOrigin()
 	@RequestMapping(method = RequestMethod.PUT, path = "/editar-empleado/{idEmpleado}", produces = "application/json")
 	@ResponseBody
-	public ResponseEntity<String> editarEmpleado(@PathVariable("idEmpleado") int idEmpleado,@RequestBody PayloaEditardEmpleados payload) {
+	public ResponseEntity<String> editarEmpleado(@PathVariable("idEmpleado") int idEmpleado,@RequestBody PayloaEditardEmpleados payload, Authentication auth) {
 		SeguridadUtils utils = new SeguridadUtils();
 		DTOResponse response = new DTOResponse();
-		serviceEmpleados.editarEmpleado(idEmpleado,payload, response);
+		serviceEmpleados.editarEmpleado(idEmpleado,payload, response, auth);
 		return ResponseEntity.ok().header(null).body(utils.objectToJson(response));
 	}
 	
 	@CrossOrigin()
 	@RequestMapping(method = RequestMethod.DELETE, path = "/eliminar-empleado/{idEmpleado}", produces = "application/json")
 	@ResponseBody
-	public ResponseEntity<DTOResponse> eliminarEmpleado(@PathVariable("idEmpleado") int idEmpleado) {
+	public ResponseEntity<DTOResponse> eliminarEmpleado(@PathVariable("idEmpleado") int idEmpleado, Authentication auth) {
 		DTOResponse response = new DTOResponse();
-		serviceEmpleados.eliminarEmpleado(idEmpleado, response);
+		serviceEmpleados.eliminarEmpleado(idEmpleado, response, auth);
 		return ResponseEntity.ok().header(null).body(response);
 	}
 	

@@ -6,6 +6,7 @@ import java.util.Optional;
 import javax.servlet.http.HttpServletResponse;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -13,11 +14,13 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import mx.gob.tecdmx.tablerofirmas.Constants;
 import mx.gob.tecdmx.tablerofirmas.entity.inst.InstEmpleado;
-import mx.gob.tecdmx.tablerofirmas.entity.pki.PkiUsuariosCert;
+import mx.gob.tecdmx.tablerofirmas.entity.seg.SegOrgLogSesion;
 import mx.gob.tecdmx.tablerofirmas.entity.seg.SegOrgUsuarios;
 import mx.gob.tecdmx.tablerofirmas.repository.inst.InstEmpleadoRepository;
 import mx.gob.tecdmx.tablerofirmas.repository.pki.PkiUsuariosCertRepository;
+import mx.gob.tecdmx.tablerofirmas.repository.seg.SegOrgLogSesionRepository;
 import mx.gob.tecdmx.tablerofirmas.repository.seg.SegOrgUsuariosRepository;
+import mx.gob.tecdmx.tablerofirmas.utils.VOUsuario;
 
 @Service
 public class ServiceLogin {
@@ -27,6 +30,9 @@ public class ServiceLogin {
 
 	@Autowired
 	private SegOrgUsuariosRepository segOrgUsuariosRepository;
+	
+	@Autowired
+	SegOrgLogSesionRepository segOrgLogSesionRepository;
 
 	@Autowired
 	InstEmpleadoRepository instEmpleadoRepository;
@@ -48,21 +54,47 @@ public class ServiceLogin {
 		}
 		
 		if (credentials.isPresent()) {
+			
+			//almacena el Log de la sesión
+			SegOrgLogSesion logSesión = new SegOrgLogSesion();
+			
+			logSesión.setN_id_usuario(credentials.get());
+			logSesión.setD_fecha_inicio(new Date());
+			
+			SegOrgLogSesion lastSesionGuardada = null;
+			Optional<SegOrgLogSesion> lastSesionExist = segOrgLogSesionRepository.findTopByOrderByIdDesc();
+			
+			if(lastSesionExist.isPresent()) {
+				logSesión.setChain_n_session_id(lastSesionExist.get());
+				lastSesionGuardada = segOrgLogSesionRepository.save(logSesión);
+				
+			}else {
+				lastSesionGuardada = segOrgLogSesionRepository.save(logSesión);
+				logSesión.setChain_n_session_id(lastSesionGuardada);
+				lastSesionGuardada = segOrgLogSesionRepository.save(logSesión);
+				
+			}
+			
+			
 			boolean coincide = bCryptPasswordEncoder.matches(payload.getPassword(),
 					credentials.get().getsContrasenia());
 			if (coincide) {
 				String token = Jwts.builder().setIssuedAt(new Date()).setIssuer(Constants.ISSUER_INFO)
 						.setSubject(payload.getEmail())
+						.setId(lastSesionGuardada.getId()+"")
 						.setExpiration(new Date(System.currentTimeMillis() + Constants.TOKEN_EXPIRATION_TIME))
 						.signWith(SignatureAlgorithm.HS512, Constants.SUPER_SECRET_KEY).compact();
 				response.addHeader("email", credentials.get().getsEmail());
 				response.addHeader("nombre", credentials.get().getsUsuario());
 				response.addHeader("idEmpleado", empleado.get().getId() + "");
 				response.addHeader(Constants.HEADER_AUTHORIZACION_KEY, Constants.TOKEN_BEARER_PREFIX + " " + token);
+				
+				
 				responseDto.setStatus("success");
 				responseDto.setMessage("Autenticación exitosa");
 				responseDto.setToken(token);
 				responseDto.setData(empleado.get().getId());
+				
 			} else {
 				responseDto.setStatus("failed");
 				responseDto.setMessage("Autenticación fallida");
@@ -70,20 +102,45 @@ public class ServiceLogin {
 		} else {
 			credentials = segOrgUsuariosRepository.findBysUsuario(payload.getEmail());
 			if (credentials.isPresent()) {
+				
+				//almacena el Log de la sesión
+				SegOrgLogSesion logSesión = new SegOrgLogSesion();
+				
+				logSesión.setN_id_usuario(credentials.get());
+				logSesión.setD_fecha_inicio(new Date());
+				
+				SegOrgLogSesion lastSesionGuardada = null;
+				Optional<SegOrgLogSesion> lastSesionExist = segOrgLogSesionRepository.findTopByOrderByIdDesc();
+				
+				if(lastSesionExist.isPresent()) {
+					logSesión.setChain_n_session_id(lastSesionExist.get());
+					lastSesionGuardada = segOrgLogSesionRepository.save(logSesión);
+					
+				}else {
+					lastSesionGuardada = segOrgLogSesionRepository.save(logSesión);
+					logSesión.setChain_n_session_id(lastSesionGuardada);
+					lastSesionGuardada = segOrgLogSesionRepository.save(logSesión);
+					
+				}
+				
 				boolean coincide = bCryptPasswordEncoder.matches(payload.getPassword(),
 						credentials.get().getsContrasenia());
 				if (coincide) {
 					String token = Jwts.builder().setIssuedAt(new Date()).setIssuer(Constants.ISSUER_INFO)
 							.setSubject(payload.getEmail())
+							.setId(lastSesionGuardada.getId()+"")
 							.setExpiration(new Date(System.currentTimeMillis() + Constants.TOKEN_EXPIRATION_TIME))
 							.signWith(SignatureAlgorithm.HS512, Constants.SUPER_SECRET_KEY).compact();
 					response.addHeader("email", credentials.get().getsEmail());
 					response.addHeader("nombre", credentials.get().getsUsuario());
 					response.addHeader("idEmpleado", empleado.get().getId() + "");
 					response.addHeader(Constants.HEADER_AUTHORIZACION_KEY, Constants.TOKEN_BEARER_PREFIX + " " + token);
+				
 					responseDto.setStatus("success");
 					responseDto.setMessage("Autenticación exitosa");
 					responseDto.setToken(token);
+					responseDto.setData(empleado.get().getId());
+					
 				} else {
 					responseDto.setStatus("failed");
 					responseDto.setMessage("Autenticación fallida");
@@ -97,6 +154,26 @@ public class ServiceLogin {
 
 		return responseDto;
 	}
+	
+	public boolean logout(Authentication auth) {
+		VOUsuario usuarioVO = (VOUsuario) auth.getDetails();
+		Optional<SegOrgLogSesion> sesionExist =segOrgLogSesionRepository.findById(Integer.parseInt(usuarioVO.getIdSession()));
+		if(sesionExist.isPresent()) {
+			
+			 long tiempoTerminacion = System.currentTimeMillis();
+			//almacena el Log de la sesión
+			sesionExist.get().setD_fecha_fin(new Date());
+			sesionExist.get().setN_end_sesion(tiempoTerminacion);
+			segOrgLogSesionRepository.save(sesionExist.get());
+			
+			return true;
+		}
+		
+		
+		return false;
+		
+	}
+	
 
 	public DTOResponseLogin updatePassword(DTOPayloadLogin payload) {
 		DTOResponseLogin responseDto = new DTOResponseLogin();
@@ -124,10 +201,31 @@ public class ServiceLogin {
 			responseDto.setMessage("No cuenta con permisos para firmar por que su cuenta ya no se encuentra activa");
 			return responseDto;
 		}
+		
+		//almacena el Log de la sesión
+		SegOrgLogSesion logSesión = new SegOrgLogSesion();
+		
+		logSesión.setN_id_usuario(credentials.get());
+		logSesión.setD_fecha_inicio(new Date());
+		
+		SegOrgLogSesion lastSesionGuardada = null;
+		Optional<SegOrgLogSesion> lastSesionExist = segOrgLogSesionRepository.findTopByOrderByIdDesc();
+		
+		if(lastSesionExist.isPresent()) {
+			logSesión.setChain_n_session_id(lastSesionExist.get());
+			lastSesionGuardada = segOrgLogSesionRepository.save(logSesión);
+			
+		}else {
+			lastSesionGuardada = segOrgLogSesionRepository.save(logSesión);
+			logSesión.setChain_n_session_id(lastSesionGuardada);
+			lastSesionGuardada = segOrgLogSesionRepository.save(logSesión);
+			
+		}
 
 		//Optional<PkiUsuariosCert> usuCert = pkiUsuariosCertRepository.findByX509SerialNumber(payload.getNoSerie());
 		String token = Jwts.builder().setIssuedAt(new Date()).setIssuer(Constants.ISSUER_INFO)
 				.setSubject(payload.getEmail())
+				.setId(lastSesionGuardada.getId()+"")
 				.setExpiration(new Date(System.currentTimeMillis() + Constants.TOKEN_EXPIRATION_TIME))
 				.signWith(SignatureAlgorithm.HS512, Constants.SUPER_SECRET_KEY).compact();
 		response.addHeader("email", payload.getEmail());

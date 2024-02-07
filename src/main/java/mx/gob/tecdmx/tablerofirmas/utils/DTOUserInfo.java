@@ -1,7 +1,8 @@
-package mx.gob.tecdmx.tablerofirmas.api.usuarios;
+package mx.gob.tecdmx.tablerofirmas.utils;
 
-import mx.gob.tecdmx.tablerofirmas.api.menu.ResponseBodyMenu;
-
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
+@JsonInclude(Include.NON_NULL)
 public class DTOUserInfo {
 	String email;
 	String usuario;
@@ -11,7 +12,11 @@ public class DTOUserInfo {
 	int idUsuario;
 	int idEmpleado;
 	String rol;
+	String aplicacion;
+	String statusCuenta;
 	ResponseBodyMenu menu;
+	String idSession;
+	
 	public String getEmail() {
 		return email;
 	}
@@ -66,7 +71,24 @@ public class DTOUserInfo {
 	public void setMenu(ResponseBodyMenu menu) {
 		this.menu = menu;
 	}
-	
+	public String getAplicacion() {
+		return aplicacion;
+	}
+	public void setAplicacion(String aplicacion) {
+		this.aplicacion = aplicacion;
+	}
+	public String getStatusCuenta() {
+		return statusCuenta;
+	}
+	public void setStatusCuenta(String statusCuenta) {
+		this.statusCuenta = statusCuenta;
+	}
+	public String getIdSession() {
+		return idSession;
+	}
+	public void setIdSession(String idSession) {
+		this.idSession = idSession;
+	}
 	
 	
 }

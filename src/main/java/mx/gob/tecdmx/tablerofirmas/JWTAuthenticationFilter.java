@@ -28,7 +28,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import mx.gob.tecdmx.tablerofirmas.entity.seg.SegOrgUsuarios;
-import mx.gob.tecdmx.tablerofirmas.api.usuarios.VOUsuario;
+import mx.gob.tecdmx.tablerofirmas.utils.VOUsuario;
 
 public class JWTAuthenticationFilter extends UsernamePasswordAuthenticationFilter {
 

@@ -3,6 +3,7 @@ package mx.gob.tecdmx.tablerofirmas.api.login;
 import javax.servlet.http.HttpServletResponse;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -23,6 +24,14 @@ public class RestControllerLogin {
 	public DTOResponseLogin login(@RequestBody DTOPayloadLogin payload, HttpServletResponse response) {
 		return loginService.login(payload, response);
 	}
+	
+	@CrossOrigin()
+	@RequestMapping(method = RequestMethod.POST, path = "/logout", produces = "application/json")
+	@ResponseBody
+	public boolean logOut(Authentication auth) {
+		return loginService.logout(auth);
+	}
+	
 	
 	@CrossOrigin()
 	@RequestMapping(method = RequestMethod.POST, path = "/login-escritorio", produces = "application/json")

@@ -9,20 +9,25 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 
-import mx.gob.tecdmx.tablerofirmas.api.usuarios.VOUsuario;
 import mx.gob.tecdmx.tablerofirmas.entity.seg.SegCatNivelModulo;
+import mx.gob.tecdmx.tablerofirmas.entity.seg.SegOrgLogSesion;
 import mx.gob.tecdmx.tablerofirmas.entity.seg.SegOrgModulos;
 import mx.gob.tecdmx.tablerofirmas.entity.seg.SegOrgRoles;
 import mx.gob.tecdmx.tablerofirmas.entity.seg.SegOrgRolesModulos;
 import mx.gob.tecdmx.tablerofirmas.entity.seg.SegOrgRolesUsuarios;
 import mx.gob.tecdmx.tablerofirmas.entity.seg.SegOrgUsuarios;
 import mx.gob.tecdmx.tablerofirmas.repository.seg.SegCatNivelModuloRepository;
+import mx.gob.tecdmx.tablerofirmas.repository.seg.SegOrgLogSesionRepository;
 import mx.gob.tecdmx.tablerofirmas.repository.seg.SegOrgModulosRepository;
 import mx.gob.tecdmx.tablerofirmas.repository.seg.SegOrgRolesModulosRepository;
 import mx.gob.tecdmx.tablerofirmas.repository.seg.SegOrgRolesRepository;
 import mx.gob.tecdmx.tablerofirmas.repository.seg.SegOrgRolesUsuariosRepository;
 import mx.gob.tecdmx.tablerofirmas.repository.seg.SegOrgUsuariosRepository;
+import mx.gob.tecdmx.tablerofirmas.utils.DTOPermisos;
 import mx.gob.tecdmx.tablerofirmas.utils.DTOResponse;
+import mx.gob.tecdmx.tablerofirmas.utils.PayloadMenu;
+import mx.gob.tecdmx.tablerofirmas.utils.ResponseBodyMenu;
+import mx.gob.tecdmx.tablerofirmas.utils.VOUsuario;
 
 
 @Service
@@ -46,6 +51,9 @@ public class ServiceMenu {
 	
 	@Autowired
 	SegOrgRolesRepository segOrgRolesRepository;
+	
+	@Autowired
+	SegOrgLogSesionRepository segOrgLogSesionRepository;
 	
 	@Value("${sistema.nombre}")
 	private String nombreAplicativo;
@@ -83,18 +91,18 @@ public class ServiceMenu {
 	
 
 	public ResponseBodyMenu getMenu(ResponseBodyMenu acceso, SegOrgUsuarios usuario) {
-		 List<SegOrgRolesUsuarios> usuariosRoles = segOrgRolesUsuariosRepository.findBynIdUsuario(usuario);
+		 List<SegOrgRolesUsuarios> usuariosRoles = segOrgRolesUsuariosRepository.findByIdUsuario(usuario);
 
 		 //Buscar los menus a los que tiene acceso en una determinada aplicación
 		 for(SegOrgRolesUsuarios usuarioRol:usuariosRoles) {
-			 List<SegOrgRolesModulos> rolesModulos = segOrgRolesModulosRepository.findBySegOrgRoles( usuarioRol.getnIdRol());
+			 List<SegOrgRolesModulos> rolesModulos = segOrgRolesModulosRepository.findBySegOrgRoles( usuarioRol.getIdRol());
 			 List<PayloadMenu> menu = new ArrayList<PayloadMenu>();
 			 for(SegOrgRolesModulos rolMod:rolesModulos) {
 				 if(rolMod.getSegOrgModulos().getDescModulo().equals(nombreAplicativo)&&rolMod.getSegOrgModulos().getnIdNivel().getDescNivel().equals("Aplicación")) {
 					 acceso.setAplicacion(rolMod.getSegOrgModulos().getDescModulo());
 					 int idAplicacion = rolMod.getSegOrgModulos().getId();
 					 fillMenu(rolesModulos, menu, idAplicacion);
-					 acceso.setRol(usuarioRol.getnIdRol().getDescripcion());
+					 acceso.setRol(usuarioRol.getIdRol().getDescripcion());
 					 acceso.setMenu(menu);
 					 break;
 				 }
@@ -149,10 +157,14 @@ public class ServiceMenu {
 		return true;
 	}
 	
-	public SegOrgModulos storeMenu(PayloadMenu payload, int pos, SegOrgModulos padreid, DTOResponse response) {
+	public SegOrgModulos storeMenu(PayloadMenu payload, int pos, SegOrgModulos padreid, DTOResponse response,  Authentication auth) {
 		SegOrgModulos moduloPadre = null;
 		
 		SegOrgModulos modulo = new SegOrgModulos();
+		
+		VOUsuario usuarioVO = (VOUsuario) auth.getDetails();
+		Optional<SegOrgLogSesion> sesionExist =segOrgLogSesionRepository.findById(Integer.parseInt(usuarioVO.getIdSession()));
+		
 		
 		SegCatNivelModulo nivelModulo = findNivel(payload.getNivelModulo());
 		modulo.setnIdNivel(nivelModulo);
@@ -176,7 +188,7 @@ public class ServiceMenu {
 		moduloPadre = segOrgModulosRepository.save(modulo);
 		if(payload.getModulos()!=null) {
 			for(int i=0; i<payload.getModulos().size(); i++) {
-				storeMenu(payload.getModulos().get(i), i+1, moduloPadre, response);
+				storeMenu(payload.getModulos().get(i), i+1, moduloPadre, response, auth);
 			}
 		}
 		
@@ -193,7 +205,7 @@ public class ServiceMenu {
 					rolToSave.setUpdate(permiso.isEditar()?"S":"N");
 					rolToSave.setDelete(permiso.isEliminar()?"S":"N");
 					rolToSave.setPublico(permiso.isPublico()?"S":"N");
-					rolToSave.setN_session_id(null);
+					rolToSave.setN_session_id(sesionExist.get().getId());
 					
 					segOrgRolesModulosRepository.save(rolToSave);
 				}
@@ -206,7 +218,8 @@ public class ServiceMenu {
 	}
 	
 	
-	public DTOResponse createMenu(PayloadMenu payload, DTOResponse response) {
+	public DTOResponse createMenu(PayloadMenu payload, DTOResponse response,  Authentication auth) {
+		
 		boolean hasNivel = validateNivelAndPermisos(payload);
 		
 		if(!hasNivel) {
@@ -214,7 +227,7 @@ public class ServiceMenu {
 			response.setStatus("Fail");
 			return response;
 		}
-		SegOrgModulos moduloStored = storeMenu(payload, 1, null, response) ;
+		SegOrgModulos moduloStored = storeMenu(payload, 1, null, response, auth) ;
 		if(moduloStored!=null) {
 			response.setMessage("EL menú se ha guardado exitósamente");
 			response.setStatus("Success");
