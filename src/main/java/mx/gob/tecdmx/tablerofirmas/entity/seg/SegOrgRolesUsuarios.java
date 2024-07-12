@@ -9,7 +9,10 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
-import javax.persistence.Table;import mx.gob.tecdmx.tablerofirmas.entity.inst.InstUAdscripcion;
+import javax.persistence.Table;
+
+import mx.gob.tecdmx.tablerofirmas.entity.inst.InstEmpleadoPuestoArea;
+import mx.gob.tecdmx.tablerofirmas.entity.inst.InstUAdscripcion;
 
 @Entity
 @Table(name = "seg_org_roles_usuarios", schema = "public")
@@ -27,9 +30,14 @@ public class SegOrgRolesUsuarios {
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name="n_id_usuario", referencedColumnName="n_id_usuario")
 	SegOrgUsuarios  idUsuario;
+
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name="n_id_empleado_puesto_area", referencedColumnName="n_id_empleado_puesto_area")
+	InstEmpleadoPuestoArea idEmpleadoPuestoArea;
+	
   
 	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name="n_id_u_adscripcion", referencedColumnName="n_id_u_adscripcion")
+	@JoinColumn(name="n_id_u_adscripcion_detalle", referencedColumnName="n_id_u_adscripcion_detalle")
 	InstUAdscripcion  nIdUAdscripcion;
   
 	@ManyToOne(fetch = FetchType.LAZY)
@@ -76,7 +84,13 @@ public class SegOrgRolesUsuarios {
 		this.nSessionId = nSessionId;
 	}
 
-	
-	
+	public InstEmpleadoPuestoArea getIdEmpleadoPuestoArea() {
+		return idEmpleadoPuestoArea;
+	}
+
+	public void setIdEmpleadoPuestoArea(InstEmpleadoPuestoArea idEmpleadoPuestoArea) {
+		this.idEmpleadoPuestoArea = idEmpleadoPuestoArea;
+	}
+
 	
 }

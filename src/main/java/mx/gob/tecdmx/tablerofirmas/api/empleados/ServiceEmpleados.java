@@ -13,7 +13,7 @@ import mx.gob.tecdmx.tablerofirmas.entity.inst.InstCatAreas;
 import mx.gob.tecdmx.tablerofirmas.entity.inst.InstCatPuestos;
 import mx.gob.tecdmx.tablerofirmas.entity.inst.InstCatSexo;
 import mx.gob.tecdmx.tablerofirmas.entity.inst.InstEmpleado;
-import mx.gob.tecdmx.tablerofirmas.entity.inst.InstEmpleadoPuesto;
+import mx.gob.tecdmx.tablerofirmas.entity.inst.InstEmpleadoPuestoArea;
 import mx.gob.tecdmx.tablerofirmas.entity.inst.InstLogEmpleado;
 import mx.gob.tecdmx.tablerofirmas.entity.inst.InstTitularUAdscripcion;
 import mx.gob.tecdmx.tablerofirmas.entity.inst.InstUAdscripcion;
@@ -29,7 +29,7 @@ import mx.gob.tecdmx.tablerofirmas.entity.seg.SegOrgUsuarios;
 import mx.gob.tecdmx.tablerofirmas.repository.inst.InstCatAreasRepository;
 import mx.gob.tecdmx.tablerofirmas.repository.inst.InstCatPuestosRepository;
 import mx.gob.tecdmx.tablerofirmas.repository.inst.InstCatSexoRepository;
-import mx.gob.tecdmx.tablerofirmas.repository.inst.InstEmpleadoPuestoRepository;
+import mx.gob.tecdmx.tablerofirmas.repository.inst.InstEmpleadoPuestoAreaRepository;
 import mx.gob.tecdmx.tablerofirmas.repository.inst.InstEmpleadoRepository;
 import mx.gob.tecdmx.tablerofirmas.repository.inst.InstLogEmpleadoRepository;
 import mx.gob.tecdmx.tablerofirmas.repository.inst.InstTitularUAdscripcionRepository;
@@ -60,7 +60,7 @@ public class ServiceEmpleados {
 	InstCatSexoRepository instCatSexoRepository;
 
 	@Autowired
-	InstEmpleadoPuestoRepository instEmpleadoPuestoRepository;
+	InstEmpleadoPuestoAreaRepository instEmpleadoPuestoRepository;
 
 	@Autowired
 	InstEmpleadoRepository instEmpleadoRepository;
@@ -100,7 +100,60 @@ public class ServiceEmpleados {
 	
 	@Autowired
 	PkiX509AcAutorizadasRepository pkiX509AcAutorizadasRepository;
+	
+	@Autowired
+	InstEmpleadoPuestoAreaRepository InstEmpleadoPuestoAreaRepository;
 
+	public DTOResponse createPerfil(PayloadPerfiles payload, DTOResponse response) {
+		
+		Optional<InstEmpleado> empleado = instEmpleadoRepository.findById(payload.getIdNumEmpleado());
+		Optional<InstCatAreas> area = instCatAreasRepository.findById(payload.getIdCatArea());
+		Optional<InstCatPuestos> puesto = instCatPuestosRepository.findById(payload.getIdCatPuesto());
+		
+		
+		
+		
+		if(empleado.isPresent()&&area.isPresent()&&puesto.isPresent()) {
+			InstEmpleadoPuestoArea perfil = new InstEmpleadoPuestoArea();
+			
+			perfil.setIdNumEmpleado(empleado.get());
+			perfil.setIdCatArea(area.get());
+			perfil.setIdPuesto(puesto.get());
+			perfil.setFechaConclusion(null);
+			perfil.setFechaAlta(new Date());
+			perfil.setTipoEstructura(payload.getTipoEstructura());
+			perfil.setActivo(true);
+			
+			InstEmpleadoPuestoAreaRepository.save(perfil);
+			
+			Optional<SegOrgRoles> rol = segOrgRolesRepository.findById(payload.getIdRol());
+			Optional<SegOrgUsuarios> usuario = segOrgUsuariosRepository.findById(payload.getIdUsuario());
+			Optional<InstUAdscripcion> uAdscripcion = instUAdscripcionRepository.findById(payload.getIdUAdscripcionDetalle());
+			
+			if(rol.isPresent()&&usuario.isPresent()&&uAdscripcion.isPresent()) {
+				SegOrgRolesUsuarios rolesUsuarios = new SegOrgRolesUsuarios();
+				rolesUsuarios.setIdEmpleadoPuestoArea(perfil);
+				rolesUsuarios.setIdRol(rol.get());
+				rolesUsuarios.setIdUsuario(usuario.get());
+				rolesUsuarios.setnIdUAdscripcion(uAdscripcion.get());
+				
+				segOrgRolesUsuariosRepository.save(rolesUsuarios);
+				
+				response.setMessage("El perfil se ha creado satisfactoriamente");
+				response.setStatus("Success");
+				
+				return response;
+			}
+			
+			
+			
+		}
+		
+		
+		
+		return null;
+	}
+	
 	public DTOResponse createEmpleado(PayloadEmpleados payload, DTOResponse response) {
 		SeguridadUtils utils = new SeguridadUtils();
 		ResponseBodyEmpleados resp = new ResponseBodyEmpleados();
@@ -180,10 +233,11 @@ public class ServiceEmpleados {
 					empleado.setCurp(payload.getCurp());
 					empleado.setRfc(payload.getRfc());
 					empleado.setPathFotografia(payload.getPathFotografia());
+					empleado.setActivo(true);
 					empleado.setIdUsuario(usuarioStored);
 					InstEmpleado empleadoStored = instEmpleadoRepository.save(empleado);
 
-					InstEmpleadoPuesto empleadoPuesto = new InstEmpleadoPuesto();
+					InstEmpleadoPuestoArea empleadoPuesto = new InstEmpleadoPuestoArea();
 					empleadoPuesto.setIdNumEmpleado(empleadoStored);
 					empleadoPuesto.setIdCatArea(area.get());
 					empleadoPuesto.setIdPuesto(puesto.get());
@@ -200,7 +254,7 @@ public class ServiceEmpleados {
 					if (payload.isEsTitular()) {
 						InstTitularUAdscripcion titular = new InstTitularUAdscripcion();
 						titular.setIdUnAdscripcion(area.get().getIdUnAdscripcion());
-						titular.setIdEmpleadoPuesto(empleadoPuesto);
+						titular.setIdEmpleadoPuestoArea(empleadoPuesto);
 						titular.setFechaInicio(utils.formatDate(payload.getFechainicioTitular()));
 						titular.setFechaConclusion(null);
 
@@ -224,8 +278,8 @@ public class ServiceEmpleados {
 
 	public DTOResponse createEmpleadoV2(PayloadEmpleados payload, DTOResponse response, Authentication auth) {
 		
-		VOUsuario usuarioVO = (VOUsuario) auth.getDetails();
-		Optional<SegOrgLogSesion> sesionExist =segOrgLogSesionRepository.findById(Integer.parseInt(usuarioVO.getIdSession()));
+//		VOUsuario usuarioVO = (VOUsuario) auth.getDetails();
+//		Optional<SegOrgLogSesion> sesionExist =segOrgLogSesionRepository.findById(Integer.parseInt(usuarioVO.getIdSession()));
 		
 		
 		SeguridadUtils utils = new SeguridadUtils();
@@ -278,23 +332,24 @@ public class ServiceEmpleados {
 					empleado.setPathFotografia(payload.getPathFotografia());
 					InstEmpleado empleadoStored = instEmpleadoRepository.save(empleado);
 
-					InstEmpleadoPuesto empleadoPuesto = new InstEmpleadoPuesto();
-					empleadoPuesto.setIdNumEmpleado(empleadoStored);
-					empleadoPuesto.setIdCatArea(area.get());
-					empleadoPuesto.setIdPuesto(puesto.get());
-					empleadoPuesto.setFechaAlta(utils.formatDate(payload.getFechaAltaEmpleado()));
-					empleadoPuesto.setFechaConclusion(null);
-					empleadoPuesto.setActivo(true);
+					InstEmpleadoPuestoArea empleadoPuestoArea = new InstEmpleadoPuestoArea();
+					empleadoPuestoArea.setIdNumEmpleado(empleadoStored);
+					empleadoPuestoArea.setIdCatArea(area.get());
+					empleadoPuestoArea.setIdPuesto(puesto.get());
+					empleadoPuestoArea.setFechaAlta(utils.formatDate(payload.getFechaAltaEmpleado()));
+					empleadoPuestoArea.setFechaConclusion(null);
+					empleadoPuestoArea.setTipoEstructura("O"); //O organizacional F funcional
+					empleadoPuestoArea.setActivo(true);
 
-					instEmpleadoPuestoRepository.save(empleadoPuesto);
+					instEmpleadoPuestoRepository.save(empleadoPuestoArea);
 					
 					//almacena el Log del empleado
-					InstLogEmpleado logEmpleado = new InstLogEmpleado();
-					Optional<InstEmpleado> empleadoLog = instEmpleadoRepository.findByEmailInst(usuarioVO.getEmail());
-					logEmpleado.setIdNumEmpleado(empleadoLog.get());
-					logEmpleado.setSessionId(sesionExist.get());
-					logEmpleado.setBitacora("creado");
-					instLogEmpleadoRepository.save(logEmpleado);
+//					InstLogEmpleado logEmpleado = new InstLogEmpleado();
+//					Optional<InstEmpleado> empleadoLog = instEmpleadoRepository.findByEmailInst(usuarioVO.getEmail());
+//					logEmpleado.setIdNumEmpleado(empleadoLog.get());
+//					logEmpleado.setSessionId(sesionExist.get());
+//					logEmpleado.setBitacora("creado");
+//					instLogEmpleadoRepository.save(logEmpleado);
 					
 					
 					response.setMessage("El empleado se ha creado correctamente");
@@ -306,7 +361,7 @@ public class ServiceEmpleados {
 					if (payload.isEsTitular()) {
 						InstTitularUAdscripcion titular = new InstTitularUAdscripcion();
 						titular.setIdUnAdscripcion(area.get().getIdUnAdscripcion());
-						titular.setIdEmpleadoPuesto(empleadoPuesto);
+						titular.setIdEmpleadoPuestoArea(empleadoPuestoArea);
 						titular.setFechaInicio(utils.formatDate(payload.getFechainicioTitular()));
 						titular.setFechaConclusion(null);
 
@@ -363,7 +418,7 @@ public class ServiceEmpleados {
 				empleado.setRfc(payload.getRfc());
 				empleado.setPathFotografia(payload.getPathFotografia());
 				InstEmpleado empleadoStored = instEmpleadoRepository.save(empleado);
-
+				
 				//almacena el Log del empleado
 				InstLogEmpleado logEmpleado = new InstLogEmpleado();
 				Optional<InstEmpleado> empleadoLog = instEmpleadoRepository.findByEmailInst(usuarioVO.getEmail());
@@ -397,9 +452,9 @@ public class ServiceEmpleados {
 
 		} else {
 
-			Optional<InstEmpleadoPuesto> empleadoPuesto = instEmpleadoPuestoRepository
+			List<InstEmpleadoPuestoArea> empleadoPuestos = instEmpleadoPuestoRepository
 					.findByIdNumEmpleado(empleadoExist.get());
-			if (!empleadoPuesto.isPresent()) {
+			if (empleadoPuestos.size()<0) {
 				response.setMessage("No se pudo obtener el area y puesto del usuario");
 				response.setStatus("Fail");
 			} else {
@@ -416,9 +471,11 @@ public class ServiceEmpleados {
 
 				empleadoExist.get().setActivo(false);
 				instEmpleadoRepository.save(empleadoExist.get());
-
-				empleadoPuesto.get().setActivo(false);
-				instEmpleadoPuestoRepository.save(empleadoPuesto.get());
+				for(InstEmpleadoPuestoArea empleadoPuesto: empleadoPuestos) {
+					empleadoPuesto.setActivo(false);
+					instEmpleadoPuestoRepository.save(empleadoPuesto);
+				}
+				
 
 				//almacena el Log del empleado
 				InstLogEmpleado logEmpleado = new InstLogEmpleado();
@@ -455,9 +512,9 @@ public class ServiceEmpleados {
 				response.setStatus("Fail");
 				return response;
 			}
-			Optional<InstEmpleadoPuesto> empleadoPuesto = instEmpleadoPuestoRepository
+			List<InstEmpleadoPuestoArea> empleadoPuesto = instEmpleadoPuestoRepository
 					.findByIdNumEmpleado(empleadoExist.get());
-			if (!empleadoPuesto.isPresent()) {
+			if (!(empleadoPuesto==null)) {
 				response.setMessage("No se pudo obtener el area y puesto del usuario");
 				response.setStatus("Fail");
 			} else {
@@ -483,11 +540,11 @@ public class ServiceEmpleados {
 				resp.setPathFotografia(empleadoExist.get().getPathFotografia());
 
 				Optional<InstCatPuestos> puesto = instCatPuestosRepository
-						.findById(empleadoPuesto.get().getIdPuesto().getId());
+						.findById(empleadoPuesto.get(1).getIdPuesto().getId());
 				resp.setPuesto(puesto.get().getDescNombramiento());
 
 				Optional<InstCatAreas> area = instCatAreasRepository
-						.findById(empleadoPuesto.get().getIdCatArea().getId());
+						.findById(empleadoPuesto.get(1).getIdCatArea().getId());
 				resp.setArea(area.get().getDescArea());
 
 				Optional<InstUAdscripcion> unidadAds = instUAdscripcionRepository

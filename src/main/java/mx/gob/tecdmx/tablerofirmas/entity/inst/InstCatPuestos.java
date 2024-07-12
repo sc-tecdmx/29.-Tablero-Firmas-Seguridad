@@ -14,7 +14,7 @@ public class InstCatPuestos {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	@Basic(optional = false)
-	@Column(name = "n_id_puesto", unique = true, nullable = false)
+	@Column(name = "n_id_cat_puesto", unique = true, nullable = false)
 	int  id;
   
 	@Column(name = "s_desc_nombramiento")

@@ -10,6 +10,7 @@ public class PayloadMenu {
 	int pos;
 	List<PayloadMenu> modulos;
 	List<DTOPermisos> permisos;
+	
 	public String getNivelModulo() {
 		return nivelModulo;
 	}

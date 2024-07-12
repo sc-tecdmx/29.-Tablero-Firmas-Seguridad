@@ -22,7 +22,7 @@ public class InstCatAreas {
 	int  id;
   
 	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name="n_id_u_adscripcion", referencedColumnName="n_id_u_adscripcion")
+	@JoinColumn(name="n_id_u_adscripcion_detalle", referencedColumnName="n_id_u_adscripcion_detalle")
 	InstUAdscripcion  idUnAdscripcion;
   
 	@Column(name = "s_desc_area")

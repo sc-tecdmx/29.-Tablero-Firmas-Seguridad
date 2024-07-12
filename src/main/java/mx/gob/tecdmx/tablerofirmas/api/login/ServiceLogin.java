@@ -45,16 +45,16 @@ public class ServiceLogin {
 		
 		Optional<SegOrgUsuarios> credentials = null;
 		credentials = segOrgUsuariosRepository.findBysEmail(payload.getEmail());
-		Optional<InstEmpleado> empleado = instEmpleadoRepository.findByIdUsuario(credentials.get());
-		
-		if(!empleado.get().isActivo()) {
-			responseDto.setStatus("failed");
-			responseDto.setMessage("Esta cuenta ya no se encuentra activa");
-			return responseDto;
-		}
 		
 		if (credentials.isPresent()) {
 			
+			Optional<InstEmpleado> empleado = instEmpleadoRepository.findByIdUsuario(credentials.get());
+			
+			if(!empleado.get().isActivo()) {
+				responseDto.setStatus("failed");
+				responseDto.setMessage("Esta cuenta ya no se encuentra activa");
+				return responseDto;
+			}
 			//almacena el Log de la sesión
 			SegOrgLogSesion logSesión = new SegOrgLogSesion();
 			
@@ -75,12 +75,11 @@ public class ServiceLogin {
 				
 			}
 			
-			
 			boolean coincide = bCryptPasswordEncoder.matches(payload.getPassword(),
 					credentials.get().getsContrasenia());
 			if (coincide) {
 				String token = Jwts.builder().setIssuedAt(new Date()).setIssuer(Constants.ISSUER_INFO)
-						.setSubject(payload.getEmail())
+						.setSubject(credentials.get().getsEmail())
 						.setId(lastSesionGuardada.getId()+"")
 						.setExpiration(new Date(System.currentTimeMillis() + Constants.TOKEN_EXPIRATION_TIME))
 						.signWith(SignatureAlgorithm.HS512, Constants.SUPER_SECRET_KEY).compact();
@@ -102,6 +101,14 @@ public class ServiceLogin {
 		} else {
 			credentials = segOrgUsuariosRepository.findBysUsuario(payload.getEmail());
 			if (credentials.isPresent()) {
+				
+				Optional<InstEmpleado> empleado = instEmpleadoRepository.findByIdUsuario(credentials.get());
+				
+				if(!empleado.get().isActivo()) {
+					responseDto.setStatus("failed");
+					responseDto.setMessage("Esta cuenta ya no se encuentra activa");
+					return responseDto;
+				}
 				
 				//almacena el Log de la sesión
 				SegOrgLogSesion logSesión = new SegOrgLogSesion();
@@ -127,7 +134,7 @@ public class ServiceLogin {
 						credentials.get().getsContrasenia());
 				if (coincide) {
 					String token = Jwts.builder().setIssuedAt(new Date()).setIssuer(Constants.ISSUER_INFO)
-							.setSubject(payload.getEmail())
+							.setSubject(credentials.get().getsEmail())
 							.setId(lastSesionGuardada.getId()+"")
 							.setExpiration(new Date(System.currentTimeMillis() + Constants.TOKEN_EXPIRATION_TIME))
 							.signWith(SignatureAlgorithm.HS512, Constants.SUPER_SECRET_KEY).compact();

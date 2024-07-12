@@ -23,12 +23,12 @@ public class InstTitularUAdscripcion {
 	int  id;
   
 	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name="n_id_u_adscripcion", referencedColumnName="n_id_u_adscripcion") 
+	@JoinColumn(name="n_id_u_adscripcion_detalle", referencedColumnName="n_id_u_adscripcion_detalle") 
 	InstUAdscripcion  idUnAdscripcion;
   
 	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name="n_id_empleado_puesto", referencedColumnName="n_id_empleado_puesto") 
-	InstEmpleadoPuesto  idEmpleadoPuesto;
+	@JoinColumn(name="n_id_empleado_puesto_area", referencedColumnName="n_id_empleado_puesto_area") 
+	InstEmpleadoPuestoArea  idEmpleadoPuestoArea;
   
 	@Column(name = "fecha_inicio")
 	Date  fechaInicio;
@@ -52,12 +52,12 @@ public class InstTitularUAdscripcion {
 		this.idUnAdscripcion = idUnAdscripcion;
 	}
 
-	public InstEmpleadoPuesto getIdEmpleadoPuesto() {
-		return idEmpleadoPuesto;
+	public InstEmpleadoPuestoArea getIdEmpleadoPuestoArea() {
+		return idEmpleadoPuestoArea;
 	}
 
-	public void setIdEmpleadoPuesto(InstEmpleadoPuesto idEmpleadoPuesto) {
-		this.idEmpleadoPuesto = idEmpleadoPuesto;
+	public void setIdEmpleadoPuestoArea(InstEmpleadoPuestoArea idEmpleadoPuestoArea) {
+		this.idEmpleadoPuestoArea = idEmpleadoPuestoArea;
 	}
 
 	public Date getFechaInicio() {

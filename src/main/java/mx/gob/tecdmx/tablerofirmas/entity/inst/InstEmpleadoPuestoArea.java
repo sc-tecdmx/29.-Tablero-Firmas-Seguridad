@@ -14,12 +14,12 @@ import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 
 @Entity
-@Table(name = "inst_empleado_puesto", schema = "public")
-public class InstEmpleadoPuesto {
+@Table(name = "inst_empleado_puesto_area", schema = "public")
+public class InstEmpleadoPuestoArea {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	@Basic(optional = false)
-	@Column(name = "n_id_empleado_puesto", unique = true, nullable = false)
+	@Column(name = "n_id_empleado_puesto_area", unique = true, nullable = false)
 	int  id;
   
 
@@ -32,7 +32,7 @@ public class InstEmpleadoPuesto {
 	InstCatAreas  idCatArea;
   
 	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name="n_id_puesto", referencedColumnName="n_id_puesto") 
+	@JoinColumn(name="n_id_cat_puesto", referencedColumnName="n_id_cat_puesto") 
 	InstCatPuestos  idPuesto;
   
 	@Column(name = "fecha_alta")
@@ -40,6 +40,9 @@ public class InstEmpleadoPuesto {
   
 	@Column(name = "fecha_conclusion")
 	Date  fechaConclusion;
+	
+	@Column(name = "n_tipo_estructura")
+	String  tipoEstructura;
 	
 	@Column(name = "activo")
 	boolean  activo;
@@ -98,6 +101,14 @@ public class InstEmpleadoPuesto {
 
 	public void setActivo(boolean activo) {
 		this.activo = activo;
+	}
+
+	public String getTipoEstructura() {
+		return tipoEstructura;
+	}
+
+	public void setTipoEstructura(String tipoEstructura) {
+		this.tipoEstructura = tipoEstructura;
 	}
 
 	

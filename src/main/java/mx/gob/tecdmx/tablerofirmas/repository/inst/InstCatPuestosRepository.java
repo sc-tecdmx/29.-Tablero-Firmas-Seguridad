@@ -9,6 +9,9 @@ import mx.gob.tecdmx.tablerofirmas.entity.inst.InstCatPuestos;
 
 @Repository
 public interface InstCatPuestosRepository extends CrudRepository<InstCatPuestos, Integer> {
+	
 	Optional<InstCatPuestos> findByDescNombramiento(String puesto);
+
+	Optional<InstCatPuestos> findById(InstCatPuestos idPuesto);
 	
 }

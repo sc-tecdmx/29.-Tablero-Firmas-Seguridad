@@ -9,12 +9,12 @@ import javax.persistence.Id;
 import javax.persistence.Table;
 
 @Entity
-@Table(name = "inst_u_adscripcion", schema = "public")
+@Table(name = "inst_u_adscripcion_detalle", schema = "public")
 public class InstUAdscripcion {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	@Basic(optional = false)
-	@Column(name = "n_id_u_adscripcion", unique = true, nullable = false)
+	@Column(name = "n_id_u_adscripcion_detalle", unique = true, nullable = false)
 	int id;
   
 	@Column(name = "s_desc_unidad")

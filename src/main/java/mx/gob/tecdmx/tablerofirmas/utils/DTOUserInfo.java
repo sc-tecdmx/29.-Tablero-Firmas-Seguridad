@@ -1,5 +1,7 @@
 package mx.gob.tecdmx.tablerofirmas.utils;
 
+import java.util.List;
+
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 @JsonInclude(Include.NON_NULL)
@@ -11,12 +13,10 @@ public class DTOUserInfo {
 	String apellido2;
 	int idUsuario;
 	int idEmpleado;
-	String rol;
+	List<PerfilDTO> perfiles;
 	String aplicacion;
 	String statusCuenta;
-	ResponseBodyMenu menu;
 	String idSession;
-	
 	public String getEmail() {
 		return email;
 	}
@@ -59,17 +59,11 @@ public class DTOUserInfo {
 	public void setIdEmpleado(int idEmpleado) {
 		this.idEmpleado = idEmpleado;
 	}
-	public String getRol() {
-		return rol;
+	public List<PerfilDTO> getPerfiles() {
+		return perfiles;
 	}
-	public void setRol(String rol) {
-		this.rol = rol;
-	}
-	public ResponseBodyMenu getMenu() {
-		return menu;
-	}
-	public void setMenu(ResponseBodyMenu menu) {
-		this.menu = menu;
+	public void setPerfiles(List<PerfilDTO> perfiles) {
+		this.perfiles = perfiles;
 	}
 	public String getAplicacion() {
 		return aplicacion;
@@ -89,6 +83,4 @@ public class DTOUserInfo {
 	public void setIdSession(String idSession) {
 		this.idSession = idSession;
 	}
-	
-	
 }

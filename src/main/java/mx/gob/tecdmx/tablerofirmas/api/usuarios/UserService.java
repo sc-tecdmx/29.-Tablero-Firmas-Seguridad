@@ -22,8 +22,9 @@ import mx.gob.tecdmx.tablerofirmas.api.empleados.DTOUsuario;
 import mx.gob.tecdmx.tablerofirmas.api.login.ServiceLogin;
 import mx.gob.tecdmx.tablerofirmas.api.menu.ServiceMenu;
 import mx.gob.tecdmx.tablerofirmas.entity.inst.InstCatAreas;
+import mx.gob.tecdmx.tablerofirmas.entity.inst.InstCatPuestos;
 import mx.gob.tecdmx.tablerofirmas.entity.inst.InstEmpleado;
-import mx.gob.tecdmx.tablerofirmas.entity.inst.InstEmpleadoPuesto;
+import mx.gob.tecdmx.tablerofirmas.entity.inst.InstEmpleadoPuestoArea;
 import mx.gob.tecdmx.tablerofirmas.entity.inst.InstLogEmpleado;
 import mx.gob.tecdmx.tablerofirmas.entity.seg.SegCatEstadoUsuario;
 import mx.gob.tecdmx.tablerofirmas.entity.seg.SegLogUsuario;
@@ -33,7 +34,8 @@ import mx.gob.tecdmx.tablerofirmas.entity.seg.SegOrgRolesUsuarios;
 import mx.gob.tecdmx.tablerofirmas.entity.seg.SegOrgUsuarioEstadoUsuario;
 import mx.gob.tecdmx.tablerofirmas.entity.seg.SegOrgUsuarios;
 import mx.gob.tecdmx.tablerofirmas.repository.inst.InstCatAreasRepository;
-import mx.gob.tecdmx.tablerofirmas.repository.inst.InstEmpleadoPuestoRepository;
+import mx.gob.tecdmx.tablerofirmas.repository.inst.InstCatPuestosRepository;
+import mx.gob.tecdmx.tablerofirmas.repository.inst.InstEmpleadoPuestoAreaRepository;
 import mx.gob.tecdmx.tablerofirmas.repository.inst.InstEmpleadoRepository;
 import mx.gob.tecdmx.tablerofirmas.repository.inst.InstLogEmpleadoRepository;
 import mx.gob.tecdmx.tablerofirmas.repository.seg.SegCatEstadoUsuarioRepository;
@@ -45,6 +47,7 @@ import mx.gob.tecdmx.tablerofirmas.repository.seg.SegOrgUsuarioEstadoUsuarioRepo
 import mx.gob.tecdmx.tablerofirmas.repository.seg.SegOrgUsuariosRepository;
 import mx.gob.tecdmx.tablerofirmas.utils.DTOResponse;
 import mx.gob.tecdmx.tablerofirmas.utils.DTOUserInfo;
+import mx.gob.tecdmx.tablerofirmas.utils.PerfilDTO;
 import mx.gob.tecdmx.tablerofirmas.utils.ResponseBodyMenu;
 import mx.gob.tecdmx.tablerofirmas.utils.VOUsuario;
 
@@ -69,7 +72,7 @@ public class UserService implements UserDetailsService {
 	InstCatAreasRepository instAreasRepository;
 
 	@Autowired
-	InstEmpleadoPuestoRepository empleadoPuestoRepository;
+	InstEmpleadoPuestoAreaRepository empleadoPuestoAreaRepository;
 
 	@Autowired
 	SegCatEstadoUsuarioRepository segCatEstadoUsuarioRepository;
@@ -88,6 +91,9 @@ public class UserService implements UserDetailsService {
 
 	@Autowired
 	private ServiceMenu serviceMenu;
+	
+	@Autowired
+	private InstCatPuestosRepository instCatPuestosRepository;
 
 	@Override
 	public UserDetails loadUserByUsername(String emailAndIdSession) throws UsernameNotFoundException {
@@ -97,7 +103,8 @@ public class UserService implements UserDetailsService {
 		if (!credentials.isPresent()) {
 			credentials = segOrgUsuariosRepository.findBysUsuario(email);
 			if (!credentials.isPresent()) {
-				throw new UsernameNotFoundException(email);
+//				throw new UsernameNotFoundException(email);
+				return null;
 			}
 		}
 
@@ -129,10 +136,9 @@ public class UserService implements UserDetailsService {
 				userInfo.setApellido2(empleado.get().getApellido2());
 				userInfo.setIdSession(usuarioVO.getIdSession());
 			}
-
-			ResponseBodyMenu menu = serviceMenu.getMenu(auth);
-			userInfo.setMenu(menu);
-
+			
+			List<PerfilDTO> perfiles = serviceMenu.getMenu(auth);
+			userInfo.setPerfiles(perfiles);
 			response.setData(userInfo);
 			response.setMessage("EL token es válido");
 			response.setStatus("Success");
@@ -147,8 +153,7 @@ public class UserService implements UserDetailsService {
 		VOUsuario usuarioVO = (VOUsuario) auth.getDetails();
 		SegOrgUsuarios usuarioStored = null;
 		Optional<InstEmpleado> empleado = null;
-		Optional<InstEmpleadoPuesto> empleadoPuesto = null;
-		Optional<InstCatAreas> unidadAdscId = null;
+		List<InstEmpleadoPuestoArea> empleadoPuestoAreaList = null;
 		if (user != null) {
 			// verifica que el correo institucional proporcionado corresponda a un empleado
 			// en el sistema
@@ -161,8 +166,7 @@ public class UserService implements UserDetailsService {
 					response.setData(null);
 					return response;
 				}
-				empleadoPuesto = empleadoPuestoRepository.findByIdNumEmpleado(empleado.get());
-				unidadAdscId = instAreasRepository.findById(empleadoPuesto.get().getIdCatArea().getId());
+	
 				// verifica que el correo a utilizar no se encuentre en la bd de usuarios
 				Optional<SegOrgUsuarios> usuarioEmail = segOrgUsuariosRepository.findBysEmail(user.getEmail());
 				if (usuarioEmail.isPresent()) {
@@ -198,43 +202,49 @@ public class UserService implements UserDetailsService {
 
 				// tabla usuario-estadoUsuario
 				SegOrgUsuarioEstadoUsuario bitacoraEstatusUsuario = new SegOrgUsuarioEstadoUsuario();
-				Optional<SegOrgLogSesion> sesionExist =segOrgLogSesionRepository.findById(Integer.parseInt(usuarioVO.getIdSession()));
+//				Optional<SegOrgLogSesion> sesionExist =segOrgLogSesionRepository.findById(Integer.parseInt(usuarioVO.getIdSession()));
 				bitacoraEstatusUsuario.setIdUsuario(usuarioStored);
 				bitacoraEstatusUsuario.setIdEstadoUsuario(estadoCuenta.get());
 				bitacoraEstatusUsuario.setFingerprintDispositivo(null);
 				bitacoraEstatusUsuario.setFechaStatus(new Date());
-				bitacoraEstatusUsuario.setSessionId(sesionExist.get());
+//				bitacoraEstatusUsuario.setSessionId(sesionExist.get());
 				segOrgUsuarioEstadoUsuarioRepository.save(bitacoraEstatusUsuario);
 
-				Optional<SegOrgRoles> rol = segOrgRolesRepository.findByEtiquetaRol("OP");
-				// tabla de roles-usuario
-				SegOrgRolesUsuarios rolesUsuarios = new SegOrgRolesUsuarios();
-				rolesUsuarios.setIdRol(rol.get());
-				rolesUsuarios.setIdUsuario(usuarioStored);
-				rolesUsuarios.setnIdUAdscripcion(unidadAdscId.get().getIdUnAdscripcion());
-				rolesUsuarios.setnSessionId(sesionExist.get());
+				empleadoPuestoAreaList = empleadoPuestoAreaRepository.findByIdNumEmpleado(empleado.get());
+				Optional<SegOrgRoles> rol = segOrgRolesRepository.findByEtiquetaRol("SA");
+				for(InstEmpleadoPuestoArea empleadoPuestoArea: empleadoPuestoAreaList) {
+					Optional<InstCatAreas> unidadAdscId = instAreasRepository.findById(empleadoPuestoArea.getIdCatArea().getId());
+					
+					// tabla de roles-usuario
+					SegOrgRolesUsuarios rolesUsuarios = new SegOrgRolesUsuarios();
+					rolesUsuarios.setIdRol(rol.get());
+					rolesUsuarios.setIdUsuario(usuarioStored);
+					rolesUsuarios.setIdEmpleadoPuestoArea(empleadoPuestoArea);
+					rolesUsuarios.setnIdUAdscripcion(unidadAdscId.get().getIdUnAdscripcion());
+//					rolesUsuarios.setnSessionId(sesionExist.get());
 
-				segOrgRolesUsuariosRepository.save(rolesUsuarios);
-
+					segOrgRolesUsuariosRepository.save(rolesUsuarios);
+				}
+			
 				// RELACIONA AL EMPLEADO CON EL USUARIO
 				empleado.get().setIdUsuario(usuarioStored);
 				instEmpleadoRepository.save(empleado.get());
 				
 				//almacena el Log del empleado
-				InstLogEmpleado logEmpleado = new InstLogEmpleado();
-				Optional<InstEmpleado> empleadoLog = instEmpleadoRepository.findByEmailInst(usuarioVO.getEmail());
-				logEmpleado.setIdNumEmpleado(empleadoLog.get());
-				logEmpleado.setSessionId(sesionExist.get());
-				logEmpleado.setBitacora("actualizar");
-				instLogEmpleadoRepository.save(logEmpleado);
+//				InstLogEmpleado logEmpleado = new InstLogEmpleado();
+//				Optional<InstEmpleado> empleadoLog = instEmpleadoRepository.findByEmailInst(usuarioVO.getEmail());
+//				logEmpleado.setIdNumEmpleado(empleadoLog.get());
+////				logEmpleado.setSessionId(sesionExist.get());
+//				logEmpleado.setBitacora("actualizar");
+//				instLogEmpleadoRepository.save(logEmpleado);
 				
 				//almacena el Log del usuario
-				SegLogUsuario userLog = new SegLogUsuario();
-				userLog.setN_id_usuario(usuarioStored);
-				userLog.setN_session_id(sesionExist.get().getId());
-				userLog.setD_sistema(new Date());
-				userLog.setBitacora("creado");
-				segLogUsuarioRepository.save(userLog);
+//				SegLogUsuario userLog = new SegLogUsuario();
+//				userLog.setN_id_usuario(usuarioStored);
+////				userLog.setN_session_id(sesionExist.get().getId());
+//				userLog.setD_sistema(new Date());
+//				userLog.setBitacora("creado");
+//				segLogUsuarioRepository.save(userLog);
 				
 				response.setData(usuarioStored);
 				response.setMessage("El usuario se han creado correctamente");
@@ -253,8 +263,7 @@ public class UserService implements UserDetailsService {
 						response.setData(null);
 						return response;
 					}
-					empleadoPuesto = empleadoPuestoRepository.findByIdNumEmpleado(empleado.get());
-					unidadAdscId = instAreasRepository.findById(empleadoPuesto.get().getIdCatArea().getId());
+					
 					// verifica que el correo a utilizar no se encuentre en la bd de usuarios
 					Optional<SegOrgUsuarios> usuarioEmail = segOrgUsuariosRepository.findBysEmail(user.getEmail());
 					if (usuarioEmail.isPresent()) {
@@ -291,44 +300,50 @@ public class UserService implements UserDetailsService {
 
 					// tabla usuario-estadoUsuario
 					SegOrgUsuarioEstadoUsuario bitacoraEstatusUsuario = new SegOrgUsuarioEstadoUsuario();
-					Optional<SegOrgLogSesion> sesionExist =segOrgLogSesionRepository.findById(Integer.parseInt(usuarioVO.getIdSession()));
+//					Optional<SegOrgLogSesion> sesionExist =segOrgLogSesionRepository.findById(Integer.parseInt(usuarioVO.getIdSession()));
 					
 					bitacoraEstatusUsuario.setIdUsuario(usuarioStored);
 					bitacoraEstatusUsuario.setIdEstadoUsuario(estadoCuenta.get());
 					bitacoraEstatusUsuario.setFingerprintDispositivo(null);
 					bitacoraEstatusUsuario.setFechaStatus(new Date());
-					bitacoraEstatusUsuario.setSessionId(sesionExist.get());
+//					bitacoraEstatusUsuario.setSessionId(sesionExist.get());
 					segOrgUsuarioEstadoUsuarioRepository.save(bitacoraEstatusUsuario);
 
+					empleadoPuestoAreaList = empleadoPuestoAreaRepository.findByIdNumEmpleado(empleado.get());
 					Optional<SegOrgRoles> rol = segOrgRolesRepository.findByEtiquetaRol("OP");
-					// tabla de roles-usuario
-					SegOrgRolesUsuarios rolesUsuarios = new SegOrgRolesUsuarios();
-					rolesUsuarios.setIdRol(rol.get());
-					rolesUsuarios.setIdUsuario(usuarioStored);
-					rolesUsuarios.setnIdUAdscripcion(unidadAdscId.get().getIdUnAdscripcion());
-					rolesUsuarios.setnSessionId(sesionExist.get());
+					for(InstEmpleadoPuestoArea empleadoPuestoArea: empleadoPuestoAreaList) {
+						Optional<InstCatAreas> unidadAdscId = instAreasRepository.findById(empleadoPuestoArea.getIdCatArea().getId());
+						
+						// tabla de roles-usuario
+						SegOrgRolesUsuarios rolesUsuarios = new SegOrgRolesUsuarios();
+						rolesUsuarios.setIdRol(rol.get());
+						rolesUsuarios.setIdUsuario(usuarioStored);
+						rolesUsuarios.setIdEmpleadoPuestoArea(empleadoPuestoArea);
+						rolesUsuarios.setnIdUAdscripcion(unidadAdscId.get().getIdUnAdscripcion());
+//						rolesUsuarios.setnSessionId(sesionExist.get());
 
-					segOrgRolesUsuariosRepository.save(rolesUsuarios);
+						segOrgRolesUsuariosRepository.save(rolesUsuarios);
+					}
 
 					// RELACIONA AL EMPLEADO CON EL USUARIO
 					empleado.get().setIdUsuario(usuarioStored);
 					instEmpleadoRepository.save(empleado.get());
 					
 					//almacena el Log del empleado
-					InstLogEmpleado logEmpleado = new InstLogEmpleado();
-					Optional<InstEmpleado> empleadoLog = instEmpleadoRepository.findByEmailInst(usuarioVO.getEmail());
-					logEmpleado.setIdNumEmpleado(empleadoLog.get());
-					logEmpleado.setSessionId(sesionExist.get());
-					logEmpleado.setBitacora("actualizar");
-					instLogEmpleadoRepository.save(logEmpleado);
+//					InstLogEmpleado logEmpleado = new InstLogEmpleado();
+//					Optional<InstEmpleado> empleadoLog = instEmpleadoRepository.findByEmailInst(usuarioVO.getEmail());
+//					logEmpleado.setIdNumEmpleado(empleadoLog.get());
+//					logEmpleado.setSessionId(sesionExist.get());
+//					logEmpleado.setBitacora("actualizar");
+//					instLogEmpleadoRepository.save(logEmpleado);
 
 					//almacena el Log del usuario
-					SegLogUsuario userLog = new SegLogUsuario();
-					userLog.setN_id_usuario(usuarioStored);
-					userLog.setN_session_id(sesionExist.get().getId());
-					userLog.setD_sistema(new Date());
-					userLog.setBitacora("creado");
-					segLogUsuarioRepository.save(userLog);
+//					SegLogUsuario userLog = new SegLogUsuario();
+//					userLog.setN_id_usuario(usuarioStored);
+////					userLog.setN_session_id(sesionExist.get().getId());
+//					userLog.setD_sistema(new Date());
+//					userLog.setBitacora("creado");
+//					segLogUsuarioRepository.save(userLog);
 					
 					response.setData(usuarioStored);
 					response.setMessage("El usuario se han creado correctamente");
@@ -366,10 +381,12 @@ public class UserService implements UserDetailsService {
 			userInfo.setStatusCuenta(idEstado.get().getDescripcion());
 
 			ResponseBodyMenu menu = new ResponseBodyMenu();
-			menu = serviceMenu.getMenu(menu, usuario);
-			userInfo.setRol(menu.getRol());
-			userInfo.setAplicacion(menu.getAplicacion());
-			menu.setMenu(null);
+			List<PerfilDTO> perfiles = serviceMenu.getMenu(menu, usuario);
+			userInfo.setPerfiles(perfiles);
+			
+//			userInfo.setRol(menu.getRol());
+//			userInfo.setAplicacion(menu.getAplicacion());
+//			menu.setMenu(null);
 
 			usuariosInfo.add(userInfo);
 		}

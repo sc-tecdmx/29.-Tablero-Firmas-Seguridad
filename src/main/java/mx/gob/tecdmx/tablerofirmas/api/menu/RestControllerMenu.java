@@ -28,7 +28,8 @@ public class RestControllerMenu {
 	@RequestMapping(method = RequestMethod.GET, path = "/get-menu", produces = "application/json")
 	public ResponseBodyMenu version(HttpServletResponse response, Authentication auth) {
 		System.out.println(auth.getName());
-		return menuService.getMenu(auth);
+		return null;
+		//return menuService.getMenu(auth);
 	}
 
 	@CrossOrigin()

@@ -69,4 +69,14 @@ public class RestControllerEmpleados {
 		return ResponseEntity.ok().header(null).body(utils.objectToJson(response));
 	}
 	
+	@CrossOrigin()
+	@RequestMapping(method = RequestMethod.POST, path = "/fill-data/create-perfil", produces = "application/json")
+	@ResponseBody
+	public ResponseEntity<String> createPerfil(@RequestBody PayloadPerfiles payload) {
+		SeguridadUtils utils = new SeguridadUtils();
+		DTOResponse response = new DTOResponse();
+		serviceEmpleados.createPerfil(payload, response);
+		return ResponseEntity.ok().header(null).body(utils.objectToJson(response));
+	}
+	
 }

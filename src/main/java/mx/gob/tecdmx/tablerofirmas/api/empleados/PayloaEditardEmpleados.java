@@ -1,5 +1,7 @@
 package mx.gob.tecdmx.tablerofirmas.api.empleados;
 
+import java.util.List;
+
 public class PayloaEditardEmpleados {
 	String nombre;
 	String apellido1;
@@ -11,6 +13,7 @@ public class PayloaEditardEmpleados {
 	String curp;
 	String rfc;
 	String pathFotografia;
+	List<DTOEmpleadoPuestoArea> empleadoPuestoArea;
 	
 	public String getNombre() {
 		return nombre;
@@ -72,6 +75,10 @@ public class PayloaEditardEmpleados {
 	public void setPathFotografia(String pathFotografia) {
 		this.pathFotografia = pathFotografia;
 	}
-	
-	
+	public List<DTOEmpleadoPuestoArea> getEmpleadoPuestoArea() {
+		return empleadoPuestoArea;
+	}
+	public void setEmpleadoPuestoArea(List<DTOEmpleadoPuestoArea> empleadoPuestoArea) {
+		this.empleadoPuestoArea = empleadoPuestoArea;
+	}
 }
